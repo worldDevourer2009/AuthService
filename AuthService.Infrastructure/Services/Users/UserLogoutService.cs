@@ -38,7 +38,6 @@ public class UserLogoutService : IUserLogoutService
         try
         {
             await _tokenService.RevokeAllTokensForUser(user.Email.EmailAddress!, cancellationToken);
-
             await _userRepository.UpdateUser(user, cancellationToken);
 
             return new LogoutResponse(true, "User logged out");

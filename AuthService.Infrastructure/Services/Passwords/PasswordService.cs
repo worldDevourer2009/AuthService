@@ -12,10 +12,9 @@ public class PasswordService : IPasswordService
         _context = context;
     }
 
-    public async Task<bool> VerifyPasswordForUser(string email, string password)
+    public Task<bool> VerifyPasswordForUser(string password, string passwordHash)
     {
-        var user = await GetUserByEmail(email);
-        return PasswordHasher.Instance.VerifyPassword(password, user.Password.PasswordHash!);
+        return Task.FromResult(PasswordHasher.Instance.VerifyPassword(password, passwordHash));
     }
 
     public async Task<bool> ResetPasswordForUser(string email, string oldPassword, string newPassword)

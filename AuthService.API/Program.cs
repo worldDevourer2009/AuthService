@@ -10,6 +10,7 @@ using AuthService.Infrastructure;
 using AuthService.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -37,6 +38,14 @@ builder.Services
 builder.Services
     .AddOptions<RsaKeySettings>()
     .Bind(builder.Configuration.GetSection("RsaKeySettings"));
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenLocalhost(9500, op =>
+    {
+        op.UseHttps();
+    } );
+});
 
 builder.Services.AddInfrastructure();
 builder.Services.AddApplication();
@@ -134,6 +143,8 @@ if (builder.Environment.IsDevelopment())
         await dataSeeder.SeedDataAsync();
     }
 }
+
+app.UseHealthChecks("/health");
 
 app.UseRouting();
 

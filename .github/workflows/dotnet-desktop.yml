@@ -83,7 +83,7 @@ jobs:
       - name: Build solution with specific configuration
         run: |
           dotnet build --no-restore --configuration Release --verbosity normal
-          dotnet build TaskHandler.Application/AuthService.Application.csproj --configuration Release --no-restore
+          dotnet build AuthService.Application/AuthService.Application.csproj --configuration Release --no-restore
 
       - name: Wait for Postgres and Redis
         run: |

@@ -15,7 +15,8 @@ public class UserLoginService : IUserLoginService
     private readonly ILogger<UserLoginService> _logger;
     private readonly ITokenService _tokenService;
 
-    public UserLoginService(IUserRepository userRepository, IPasswordService passwordService, ITokenService tokenService, ILogger<UserLoginService> logger)
+    public UserLoginService(IUserRepository userRepository, IPasswordService passwordService,
+        ITokenService tokenService, ILogger<UserLoginService> logger)
     {
         _userRepository = userRepository;
         _passwordService = passwordService;
@@ -25,25 +26,27 @@ public class UserLoginService : IUserLoginService
 
     public async Task<LoginResponse> LoginAsync(LoginEntry entry, CancellationToken cancellationToken = default)
     {
-        var user = await _userRepository.GetUserByEmail(entry.Email!, cancellationToken);
-
-        if (user! == null)
-        {
-            return new LoginResponse(false);
-        }
-
-        if (!await _passwordService.VerifyPasswordForUser(user.Email.EmailAddress!, entry.Password!))
-        {
-            return new LoginResponse(false);
-        }
-
         try
         {
+            if (string.IsNullOrWhiteSpace(entry.Email) || string.IsNullOrWhiteSpace(entry.Password))
+            {
+                return new LoginResponse(false, "Invalid data");
+            }
+            
+            var user = await _userRepository.GetUserByEmail(entry.Email!, cancellationToken);
+
+            if (user == null || !await _passwordService.VerifyPasswordForUser(entry.Password, user.Password.PasswordHash!))
+            {
+                return user == null ? 
+                    new LoginResponse(false, "User does not exist") : 
+                    new LoginResponse(false, "Invalid email or password");
+            }
+
             var (accessToken, refreshToken) =
                 await _tokenService.GenerateTokenPairForUser(user.Email.EmailAddress!, cancellationToken);
-            
+
             user.UpdateLastLogin();
-        
+
             return new LoginResponse(true, accessToken, refreshToken);
         }
         catch (Exception ex)

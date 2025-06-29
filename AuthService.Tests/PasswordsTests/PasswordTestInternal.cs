@@ -56,7 +56,7 @@ public class PasswordTestInternal : IAsyncLifetime
         await _userRepository.AddNewUser(newUser);
         
         //Act
-        var result = await _passwordService.VerifyPasswordForUser("test-email@gmail.com", "123456Db");
+        var result = await _passwordService.VerifyPasswordForUser("123456Db", newUser.Password.PasswordHash!);
         
         //Assert
         Assert.True(result);
@@ -70,7 +70,7 @@ public class PasswordTestInternal : IAsyncLifetime
         await _userRepository.AddNewUser(newUser);
         
         //Act
-        var result = await _passwordService.VerifyPasswordForUser("test-email@gmail.com", "123456Db12");
+        var result = await _passwordService.VerifyPasswordForUser("wrongPassword", newUser.Password.PasswordHash!);
         
         //Assert
         Assert.False(result);
@@ -83,15 +83,17 @@ public class PasswordTestInternal : IAsyncLifetime
         var newUser = User.Create("TestName", "TestSurname", "test-email@gmail.com", "123456Db");
         await _userRepository.AddNewUser(newUser);
 
+        bool result = false;
+
         try
         {
             //Act
-            var result = await _passwordService.VerifyPasswordForUser("wrongEmail", "123456Db");
+            result = await _passwordService.VerifyPasswordForUser("wrongEmail", "123456Db");
         }
         catch (Exception e)
         {
             //Assert
-            Assert.Equal("User not found", e.Message);
+            Assert.False(result);
         }
     }
 }

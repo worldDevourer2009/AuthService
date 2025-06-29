@@ -12,7 +12,7 @@ public class UserRepository : IUserRepository
         _context = context;
     }
 
-    public async Task<User> GetUserById(Guid id, CancellationToken cancellationToken = default)
+    public async Task<User?> GetUserById(Guid id, CancellationToken cancellationToken = default)
     {
         if (id == Guid.Empty)
         {
@@ -29,22 +29,30 @@ public class UserRepository : IUserRepository
         return user;
     }
 
-    public async Task<User> GetUserByEmail(string email, CancellationToken cancellationToken = default)
+    public async Task<User?> GetUserByEmail(string email, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(email))
         {
-            throw new ArgumentNullException(nameof(email));
+            return null;
         }
 
-        var emailAddress = Email.Create(email);
-        var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == emailAddress, cancellationToken);
-
-        if (user == null)
+        try
         {
-            throw new Exception("User not found");
-        }
+            var emailAddress = Email.Create(email);
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == emailAddress, cancellationToken);
 
-        return user;
+
+            if (user == null)
+            {
+                return null;
+            }
+
+            return user;
+        }
+        catch (Exception ex)
+        {
+            return null;
+        }
     }
 
     public async Task AddNewUser(User user, CancellationToken cancellationToken = default)
