@@ -12,5 +12,5 @@ public interface ITokenService
     Task<bool> RevokeAllTokensForUser(string email, CancellationToken cancellationToken = default);
     Task<bool> IsAccessTokenRevokedForUser(string accessToken, CancellationToken cancellationToken = default);
     Task<bool> IsRefreshTokenRevokedForUser(string email, CancellationToken cancellationToken = default);
-    Task<User> GetUserByRefreshToken(string? refreshToken, CancellationToken cancellationToken = default);
+    Task<User?> GetUserByRefreshToken(string? refreshToken, CancellationToken cancellationToken = default);
 }

@@ -188,7 +188,7 @@ public class TokenService : ITokenService
         try
         {
             var refreshRedisKey = GetTokenKey(RefreshTokenKey, user.UserIdentity.Id.ToString()!);
-            return await _redisService.ExistsAsync(refreshRedisKey, cancellationToken);
+            return !await _redisService.ExistsAsync(refreshRedisKey, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -197,7 +197,7 @@ public class TokenService : ITokenService
         }
     }
 
-    public async Task<User> GetUserByRefreshToken(string? refreshToken, CancellationToken cancellationToken = default)
+    public async Task<User?> GetUserByRefreshToken(string? refreshToken, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(refreshToken))
         {
@@ -220,7 +220,7 @@ public class TokenService : ITokenService
     {
         var user = await _context.GetUserByEmail(email, cancellationToken);
 
-        if (user == null!)
+        if (user == null)
         {
             throw new Exception("User not found");
         }

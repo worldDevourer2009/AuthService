@@ -12,14 +12,17 @@ public class Password : ValueObject
 
     public static Password Create(string? passwordHash)
     {
-        if (string.IsNullOrWhiteSpace(passwordHash))
-        {
-            throw new ArgumentNullException(nameof(passwordHash));
-        }
-        
         return new Password
         {
-            PasswordHash = PasswordHasher.Instance.HashPassword(passwordHash),
+            PasswordHash = PasswordHasher.Instance.HashPassword(passwordHash!),
+        };
+    }
+    
+    public static Password FromHash(string passwordHash)
+    {
+        return new Password
+        {
+            PasswordHash = passwordHash,
         };
     }
     

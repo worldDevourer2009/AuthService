@@ -3,6 +3,7 @@
   "profiles": {
     "AuthService": {
       "commandName": "Project",
+      "applicationUrl": "https://localhost:9500",
       "dotnetRunMessages": true,
       "environmentVariables": {
         "DOTNET_ENVIRONMENT": "Development"

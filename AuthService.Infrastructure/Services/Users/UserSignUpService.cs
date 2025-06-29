@@ -1,8 +1,6 @@
 using AuthService.Application.Services.Repositories;
 using AuthService.Domain.Entries;
 using AuthService.Domain.Responses;
-using AuthService.Domain.Services;
-using AuthService.Domain.Services.Passwords;
 using AuthService.Domain.Services.Tokens;
 using AuthService.Domain.Services.Users;
 using Microsoft.Extensions.Logging;
@@ -32,6 +30,11 @@ public class UserSignUpService : IUserSignUpService
 
         try
         {
+            if (await _userRepository.GetUserByEmail(entry.Email, cancellationToken) != null!)
+            {
+                return new SignUpResponse(false);
+            }
+            
             var user = User.Create(entry.FirstName, entry.LastName, entry.Email, entry.Password);
 
             await _userRepository.AddNewUser(user, cancellationToken);

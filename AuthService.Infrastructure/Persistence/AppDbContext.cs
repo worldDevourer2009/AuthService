@@ -50,7 +50,7 @@ public class AppDbContext : DbContext, IApplicationDbContext
             entity.Property(e => e.Password)
                 .HasConversion(
                     password => password.PasswordHash, 
-                    hash => Password.Create(hash))
+                    hash => Password.FromHash(hash!))
                 .HasColumnName("password_hash")
                 .IsRequired();
             

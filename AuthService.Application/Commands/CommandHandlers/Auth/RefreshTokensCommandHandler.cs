@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 namespace AuthService.Application.Commands.CommandHandlers.Auth;
 
 public record RefreshTokensRequest(string? RefreshToken) : ICommand<RefreshTokensResponse>;
-public record RefreshTokensResponse(bool Success, string? AccessToken = null, string? RefreshToken = null);
+public record RefreshTokensResponse(bool Success, string? AccessToken = null, string? RefreshToken = null, string? Message = null);
 
 public class RefreshTokensCommandHandler : ICommandHandler<RefreshTokensRequest, RefreshTokensResponse>
 {
@@ -22,7 +22,7 @@ public class RefreshTokensCommandHandler : ICommandHandler<RefreshTokensRequest,
         
         if (string.IsNullOrWhiteSpace(request.RefreshToken))
         {
-            return new RefreshTokensResponse(false);
+            return new RefreshTokensResponse(false, Message: "Refresh token is required");
         }
 
         try
@@ -31,14 +31,14 @@ public class RefreshTokensCommandHandler : ICommandHandler<RefreshTokensRequest,
 
             if (user! == null)
             {
-                return new RefreshTokensResponse(false);
+                return new RefreshTokensResponse(false, Message: "User was not found");
             }
             
             try
             {
                 if (await _tokenService.IsRefreshTokenRevokedForUser(user.Email.EmailAddress!, cancellationToken))
                 {
-                    return new RefreshTokensResponse(false);
+                    return new RefreshTokensResponse(false, Message: "Refresh token is revoked");
                 }
 
                 var cortage = await _tokenService.GenerateTokenPairForUser(user.Email.EmailAddress!, cancellationToken);
@@ -47,13 +47,13 @@ public class RefreshTokensCommandHandler : ICommandHandler<RefreshTokensRequest,
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Something went wring while generating accessToken");
-                return new RefreshTokensResponse(false);
+                return new RefreshTokensResponse(false, Message: "Something went wrong");
             }
         }
         catch (Exception ex)
         {
             _logger.LogCritical(ex, "Can't find user from refresh token");
-            return new RefreshTokensResponse(false);
+            return new RefreshTokensResponse(false, Message: $"Caught exception {ex.Message}");
         }
     }
 }
