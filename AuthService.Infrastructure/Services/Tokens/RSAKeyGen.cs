@@ -12,7 +12,7 @@ public class RSAKeyGen : IKeyGenerator, IDisposable
     public RSA Rsa => _rsa;
     public byte[] PublicKey => _publicKey!;
     public byte[] PrivateKey => _privateKey!;
-    
+
     private readonly RSA _rsa;
     private readonly RsaKeySettings _rsaKeySettings;
     private readonly byte[]? _publicKey;
@@ -52,6 +52,17 @@ public class RSAKeyGen : IKeyGenerator, IDisposable
             _publicKey = _rsa.ExportRSAPublicKey();
             _privateKey = _rsa.ExportRSAPrivateKey();
         }
+    }
+    
+    public string? ExportPublicKeyPem()
+    {
+        if (_rsa == null)
+        {
+            throw new InvalidOperationException("RSA key not initialized");
+        }
+
+        var publicKeyBytes = _rsa.ExportSubjectPublicKeyInfo();
+        return PemEncoding.Write("PUBLIC KEY", publicKeyBytes).ToString();
     }
 
     private void GenerateKey()

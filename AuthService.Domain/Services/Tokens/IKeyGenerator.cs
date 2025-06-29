@@ -4,7 +4,8 @@ namespace AuthService.Domain.Services.Tokens;
 
 public interface IKeyGenerator
 {
-    public RSA Rsa { get; }
-    public byte[] PublicKey { get; }
-    public byte[] PrivateKey { get; }
+    public RSA? Rsa { get; }
+    public byte[]? PublicKey { get; }
+    public byte[]? PrivateKey { get; }
+    string? ExportPublicKeyPem();
 }
