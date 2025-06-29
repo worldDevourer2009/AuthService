@@ -18,7 +18,7 @@ jobs:
           POSTGRES_USER: authService_user
           POSTGRES_PASSWORD: authService_password
         ports:
-          - 5432:5432              # <-- порт исправлен на 5432:5432
+          - 5432:5432
         options: >-
           --health-cmd="pg_isready --username=authService_user --dbname=authService"
           --health-interval=10s
@@ -28,7 +28,7 @@ jobs:
       redis:
         image: redis:7-alpine
         ports:
-          - 6379:6379              # <-- порт исправлен на 6379:6379
+          - 6379:6379
         options: >-
           --health-cmd="redis-cli ping"
           --health-interval=10s
@@ -42,13 +42,12 @@ jobs:
     env:
       ConnectionStrings__DefaultConnection: >-
         Host=localhost;
-        Port=5432;                 # <-- порт 5432
+        Port=5432; 
         Database=authService;
         Username=authService_user;
         Password=authService_password;
-      ConnectionStrings__Redis: localhost:6379  # <-- порт 6379
-
-      # JWT настройки для тестового окружения
+      ConnectionStrings__Redis: localhost:6379
+      
       JwtSettings__Issuer: test-issuer
       JwtSettings__Audience: test-audience
       JwtSettings__Key: MIHcAgEBBEIB7Ciph8O5ZeuVT46lzj7cRyPxZaiGxh1pvqnHIwNC/gXd6fDFmTOos8NQ+PSCQglLRpZv6rMp3j5FUsBcocT1OZmgBwYFK4EEACOhgYkDgYYABAFsumQXjiC/meBVIjpI2aRUH1v2YjOdVOzyrZKiqCNHfG7H9RMraMW6OO78EZAfMgSvr5TWieLYX3L0wyh2117osQGBEzePMBDxBnNBxZqg6AtPiXNyfRe0/vuukjdMSfgoQ37sMf9YOgNT7YRxpQUrrC90tv98eU5BTdaq7qhPNvY4tg==
@@ -107,12 +106,12 @@ jobs:
 
       - name: Run tests with environment variables
         run: |
-          export ASPNETCORE_ENVIRONMENT=Test
+          export ASPNETCORE_ENVIRONMENT=Testing
           dotnet test --no-build --configuration Release \
             --logger "trx;LogFileName=test_results.trx" \
             --results-directory TestResults \
             --verbosity normal \
-            -- RunConfiguration.EnvironmentVariables.ASPNETCORE_ENVIRONMENT=Test
+            -- RunConfiguration.EnvironmentVariables.ASPNETCORE_ENVIRONMENT=Testing
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
