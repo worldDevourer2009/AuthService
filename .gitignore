@@ -1,0 +1,46 @@
+# Rider
+.idea/
+*.iml
+
+# Visual Studio
+.vs/
+.vscode/
+*.user
+*.suo
+*.sdf
+*.cache
+*.log
+*.ncb
+*.scc
+
+# Build results
+bin/
+obj/
+out/
+Release/
+Debug/
+
+# NuGet
+*.nupkg
+*.snupkg
+*.nuspec
+packages/
+.nuget/
+
+# ASP.NET/razor
+appsettings*.json
+
+secrets.json
+AuthService.API/Keys/
+.env
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Rider cache and configuration
+.idea/
+*.iml
+
+# User-specific files
+*.userprefs

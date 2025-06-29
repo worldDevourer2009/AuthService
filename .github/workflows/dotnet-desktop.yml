@@ -1,0 +1,130 @@
+name: .NET Web API CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: authService
+          POSTGRES_USER: authService_user
+          POSTGRES_PASSWORD: authService_password
+        ports:
+          - 9432:5432
+        options: >-
+          --health-cmd="pg_isready --username=authService_user --dbname=authService"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 9532:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    strategy:
+      matrix:
+        dotnet-version: [ '9.0.x' ]
+
+    env:
+      ConnectionStrings__DefaultConnection: >-
+        Host=localhost;
+        Port=5432;
+        Database=authService;
+        Username=authService_user;
+        Password=authService_password;
+      ConnectionStrings__Redis: localhost:9532
+      # JWT настройки для тестового окружения
+      JwtSettings__Issuer: test-issuer
+      JwtSettings__Audience: test-audience
+      JwtSettings__Key: MIHcAgEBBEIB7Ciph8O5ZeuVT46lzj7cRyPxZaiGxh1pvqnHIwNC/gXd6fDFmTOos8NQ+PSCQglLRpZv6rMp3j5FUsBcocT1OZmgBwYFK4EEACOhgYkDgYYABAFsumQXjiC/meBVIjpI2aRUH1v2YjOdVOzyrZKiqCNHfG7H9RMraMW6OO78EZAfMgSvr5TWieLYX3L0wyh2117osQGBEzePMBDxBnNBxZqg6AtPiXNyfRe0/vuukjdMSfgoQ37sMf9YOgNT7YRxpQUrrC90tv98eU5BTdaq7qhPNvY4tg==
+      JwtSettings__Issuer_Prod: ${{ secrets.JWT_ISSUER }}
+      JwtSettings__Audience_Prod: ${{ secrets.JWT_AUDIENCE }}
+      JwtSettings__Key_Prod: ${{ secrets.JWT_KEY }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ matrix.dotnet-version }}
+
+      - name: Install PostgreSQL and Redis clients
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client redis-tools
+
+      - name: Restore dependencies
+        run: dotnet restore --verbosity normal
+
+      - name: Build solution with specific configuration
+        run: |
+          dotnet build --no-restore --configuration Release --verbosity normal
+          dotnet build TaskHandler.Application/AuthService.Application.csproj --configuration Release --no-restore
+
+      - name: Wait for Postgres and Redis
+        run: |
+          echo "Waiting for PostgreSQL to be ready..."
+          until pg_isready -h localhost -p 5432 -U authService_user; do
+            sleep 2
+          done
+          echo "PostgreSQL is ready!"
+          
+          echo "Waiting for Redis to be ready..."
+          until redis-cli -h localhost -p 6379 ping | grep -q PONG; do
+            sleep 2
+          done
+          echo "Redis is ready!"
+
+      - name: List test projects
+        run: |
+          echo "Available test projects:"
+          find . -name "*.Tests.csproj" -type f
+          
+      - name: Run tests with environment variables
+        run: |
+          export ASPNETCORE_ENVIRONMENT=Test
+          dotnet test --no-build --configuration Release \
+            --logger "trx;LogFileName=test_results.trx" \
+            --results-directory TestResults \
+            --verbosity normal \
+            -- RunConfiguration.EnvironmentVariables.ASPNETCORE_ENVIRONMENT=Test
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: TestResults/*.trx
+
+      - name: Upload build logs on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: build-logs
+          path: |
+            **/*.log
+            **/bin/**/*.log

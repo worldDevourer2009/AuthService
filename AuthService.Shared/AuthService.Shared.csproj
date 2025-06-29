@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <PackageId>worldDevourer2009.AuthService.Shared</PackageId>
+        <Version>1.0.0</Version>
+        <Authors>worldDevourer2009</Authors>
+        <Company>worldDevourer2009</Company>
+        <Description>Shared dto's</Description>
+        <PackageOutputPath>..\artifacts\packages</PackageOutputPath>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    
+</Project>

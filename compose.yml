@@ -1,0 +1,61 @@
+services:
+  authService-api:
+    image: authservice-api
+    build:
+      dockerfile: AuthService.API/Dockerfile
+    ports:
+      - "9000:80"
+      - "9001:443"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+80;https://+443
+    entrypoint: 
+      - "dotnet"
+      - "AuthService.API.dll"
+    volumes: 
+      - "users_data:/app/data"
+  authService-db:
+    image: postgres:15
+    container_name: authService-postgres
+    environment:
+      POSTGRES_DB: authService
+      POSTGRES_USER: authService_user
+      POSTGRES_PASSWORD: authService_password
+    ports:
+      - "9432:5432"
+    volumes:
+      - auth_postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - authService-network
+  redis:
+    image: redis:alpine
+    container_name: authService-redis
+    ports:
+      - "9532:6379"
+    volumes:
+      - authService_redis_data:/var/lib/redis/data
+    restart: 
+      unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 50s
+      timeout: 2s
+      retries: 5
+    networks:
+      - authService-network
+      
+volumes:
+  users_data:
+    external: true
+  auth_postgres_data:
+  authService_redis_data:
+
+networks:
+  authService-network:
+    driver: bridge
