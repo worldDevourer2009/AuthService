@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace AuthService.API.Controllers;
 
 [ApiController]
-[Route("/.well-known/jwks.json")]
+[Route("/.well-known/public-key.pem")]
 public class KeyController : ControllerBase
 {
     private readonly IKeyGenerator _keyGenerator;

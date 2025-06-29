@@ -62,7 +62,8 @@ public class RSAKeyGen : IKeyGenerator, IDisposable
         }
 
         var publicKeyBytes = _rsa.ExportSubjectPublicKeyInfo();
-        return PemEncoding.Write("PUBLIC KEY", publicKeyBytes).ToString();
+        var pemChars = PemEncoding.Write("PUBLIC KEY", publicKeyBytes);
+        return new string(pemChars);
     }
 
     private void GenerateKey()
