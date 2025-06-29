@@ -120,10 +120,12 @@ public class AuthController : ControllerBase
 
     private CookieOptions CreateCookieOptions(TimeSpan? expires = null)
     {
+        var isProd = _environment.IsProduction();
+        
         return new CookieOptions()
         {
             HttpOnly = true,
-            Secure = false,
+            Secure = isProd,
             SameSite = SameSiteMode.Lax,
             Expires = expires.HasValue ? DateTime.UtcNow.Add(expires.Value) : null
         };
@@ -131,10 +133,12 @@ public class AuthController : ControllerBase
 
     private void ClearCookies()
     {
+        var isProd = _environment.IsProduction();
+        
         var cookiesOptions = new CookieOptions()
         {
             HttpOnly = true,
-            Secure = false,
+            Secure = isProd,
             SameSite = SameSiteMode.Lax,
             Expires = DateTime.UtcNow.AddDays(-1)
         };

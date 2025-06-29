@@ -54,6 +54,10 @@ jobs:
       JwtSettings__Issuer_Prod: ${{ secrets.JWT_ISSUER }}
       JwtSettings__Audience_Prod: ${{ secrets.JWT_AUDIENCE }}
       JwtSettings__Key_Prod: ${{ secrets.JWT_KEY }}
+      
+      RsaKeySettings__KeyPath: './Keys/key.pem'
+      RsaKeySettings__GenerateIfMissing: 'true'
+      RsaKeySettings__KeySize: '2048'
 
     steps:
       - name: Checkout repository

@@ -108,7 +108,7 @@ public class AuthUserTests : IClassFixture<WebApplicationFactory<Program>>, IAsy
         Assert.NotNull(result);
         Assert.True(result.Success);
         Assert.NotNull(result.AccessToken);
-        
+
         foreach (var header in response.Headers)
         {
             _output.WriteLine($"Header name: {header.Key}");
@@ -251,7 +251,7 @@ public class AuthUserTests : IClassFixture<WebApplicationFactory<Program>>, IAsy
         {
             HandleCookies = false
         });
-        
+
         var email = "refresh.test@example.com";
         var password = "Password123!";
 
@@ -266,7 +266,7 @@ public class AuthUserTests : IClassFixture<WebApplicationFactory<Program>>, IAsy
                 _output.WriteLine($"  Value: {value}");
             }
         }
-        
+
         var refreshCookie = signUpResponse.Headers.GetValues("Set-Cookie")
             .FirstOrDefault(c => c.StartsWith("refreshToken="));
 
@@ -279,7 +279,7 @@ public class AuthUserTests : IClassFixture<WebApplicationFactory<Program>>, IAsy
         var response = await client.PostAsync("api/auth/refresh", null);
         var content1 = await response.Content.ReadAsStringAsync();
         _output.WriteLine(content1);
-        
+
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
@@ -392,14 +392,14 @@ public class AuthUserTests : IClassFixture<WebApplicationFactory<Program>>, IAsy
         Assert.Equal(HttpStatusCode.OK, loginResponse.StatusCode);
 
         var loginContent = await loginResponse.Content.ReadAsStringAsync();
-        
+
         var loginResult = JsonSerializer.Deserialize<LoginResultDto>(loginContent, new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
         });
 
         Assert.NotNull(loginResult);
-        
+
         client.DefaultRequestHeaders.Remove("Cookie");
         client.DefaultRequestHeaders.Add("Cookie", $"refreshToken={loginResult.RefreshToken}");
 
