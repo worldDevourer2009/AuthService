@@ -18,7 +18,7 @@ jobs:
           POSTGRES_USER: authService_user
           POSTGRES_PASSWORD: authService_password
         ports:
-          - 9432:5432
+          - 5432:5432              # <-- порт исправлен на 5432:5432
         options: >-
           --health-cmd="pg_isready --username=authService_user --dbname=authService"
           --health-interval=10s
@@ -28,7 +28,7 @@ jobs:
       redis:
         image: redis:7-alpine
         ports:
-          - 9532:6379
+          - 6379:6379              # <-- порт исправлен на 6379:6379
         options: >-
           --health-cmd="redis-cli ping"
           --health-interval=10s
@@ -42,11 +42,12 @@ jobs:
     env:
       ConnectionStrings__DefaultConnection: >-
         Host=localhost;
-        Port=5432;
+        Port=5432;                 # <-- порт 5432
         Database=authService;
         Username=authService_user;
         Password=authService_password;
-      ConnectionStrings__Redis: localhost:9532
+      ConnectionStrings__Redis: localhost:6379  # <-- порт 6379
+
       # JWT настройки для тестового окружения
       JwtSettings__Issuer: test-issuer
       JwtSettings__Audience: test-audience
@@ -92,7 +93,7 @@ jobs:
             sleep 2
           done
           echo "PostgreSQL is ready!"
-          
+
           echo "Waiting for Redis to be ready..."
           until redis-cli -h localhost -p 6379 ping | grep -q PONG; do
             sleep 2
@@ -103,7 +104,7 @@ jobs:
         run: |
           echo "Available test projects:"
           find . -name "*.Tests.csproj" -type f
-          
+
       - name: Run tests with environment variables
         run: |
           export ASPNETCORE_ENVIRONMENT=Test
