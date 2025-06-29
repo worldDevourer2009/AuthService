@@ -1,25 +1,67 @@
 using AuthService.Domain.Entities.Users;
 using AuthService.Infrastructure.Persistence;
 using AuthService.Infrastructure.Persistence.Repositories;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using Testcontainers.PostgreSql;
+using Xunit.Abstractions;
 
 namespace AuthService.Tests.DbTests;
 
-public class RestDbTestsUsers : IAsyncLifetime
+public class RestDbTestsUsers : IClassFixture<WebApplicationFactory<Program>>, IAsyncLifetime
 {
     private readonly PostgreSqlContainer _container;
+    private readonly WebApplicationFactory<Program> _webApplicationFactory;
+    private readonly ITestOutputHelper _output;
     private AppDbContext _context;
     private UserRepository _repository;
 
-    public RestDbTestsUsers()
+    public RestDbTestsUsers(WebApplicationFactory<Program> webApplicationFactory, ITestOutputHelper output)
     {
+        _output = output;
+        
         _container = new PostgreSqlBuilder()
             .WithImage("postgres:15-alpine")
             .WithDatabase("authservice_test")
             .WithUsername("testuser")
             .WithPassword("testpassword")
             .Build();
+        
+        _webApplicationFactory = webApplicationFactory.WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Testing");
+            builder.ConfigureAppConfiguration((ctx, conf) =>
+            {
+                var settings = new Dictionary<string, string>
+                {
+                    ["ConnectionStrings:DefaultConnection"] = _container.GetConnectionString(),
+                    ["JwtSettings:Issuer"] = "test-issuer",
+                    ["JwtSettings:Audience"] = "test-audience",
+                    ["JwtSettings:Key"] = "Nj8s@Z%~4vH8*91@",
+                    ["RsaKeySettings:KeyPath"] = "Keys/key.pem",
+                    ["RsaKeySettings:GenerateIfMissing"] = "true",
+                    ["RsaKeySettings:KeySize"] = "2048"
+                };
+                conf.AddInMemoryCollection(settings!);
+            });
+            
+            builder.ConfigureServices(services =>
+            {
+                services.RemoveAll<DbContextOptions<AppDbContext>>();
+                
+                services.AddDbContext<AppDbContext>(options =>
+                    options.UseNpgsql(_container.GetConnectionString(),
+                        npgsql => npgsql.MigrationsAssembly("AuthService.Infrastructure")));
+                
+                services.AddLogging(log => log.AddConsole().SetMinimumLevel(LogLevel.Debug));
+                services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
+            });
+        });
     }
     
     public async Task InitializeAsync()
@@ -37,7 +79,6 @@ public class RestDbTestsUsers : IAsyncLifetime
         await _context.Database.EnsureCreatedAsync();
 
         _repository = new UserRepository(_context);
-        
     }
 
     public async Task DisposeAsync()
@@ -55,7 +96,7 @@ public class RestDbTestsUsers : IAsyncLifetime
         
         // Act
         await _repository.AddNewUser(user);
-        var userFromDb = await _repository.GetUserByEmail(user.Email.EmailAddress, default);
+        var userFromDb = await _repository.GetUserByEmail(user.Email.EmailAddress!, default);
         
         // Assert
         Assert.NotNull(userFromDb);

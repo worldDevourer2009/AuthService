@@ -25,14 +25,14 @@ public class UserSignUpService : IUserSignUpService
         if (string.IsNullOrWhiteSpace(entry.Email) || string.IsNullOrWhiteSpace(entry.Password) ||
             string.IsNullOrWhiteSpace(entry.FirstName) || string.IsNullOrWhiteSpace(entry.LastName))
         {
-            return new SignUpResponse(false);
+            return new SignUpResponse(false, Message :"Invalid data");
         }
 
         try
         {
             if (await _userRepository.GetUserByEmail(entry.Email, cancellationToken) != null!)
             {
-                return new SignUpResponse(false);
+                return new SignUpResponse(false, Message :"User does not exists");
             }
             
             var user = User.Create(entry.FirstName, entry.LastName, entry.Email, entry.Password);
@@ -47,7 +47,7 @@ public class UserSignUpService : IUserSignUpService
         catch (Exception ex)
         {
             _logger.LogCritical(ex,"Something went wrong while signing up");
-            return new SignUpResponse(false);
+            return new SignUpResponse(false, Message: $"Caught exception {ex.Message}");
         }
     }
 }

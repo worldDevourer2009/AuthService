@@ -1,3 +1,3 @@
 namespace AuthService.Domain.Responses;
 
-public record SignUpResponse(bool Success, string? AccessToken = null, string? RefreshToken = null);
+public record SignUpResponse(bool Success, string? AccessToken = null, string? RefreshToken = null, string? Message = null);

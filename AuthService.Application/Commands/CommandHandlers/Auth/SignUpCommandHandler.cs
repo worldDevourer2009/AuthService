@@ -24,7 +24,7 @@ public class SignUpCommandHandler : ICommandHandler<SignUpRequest, SignUpRespons
 
             if (!response.Success)
             {
-                return new SignUpResponse(false, Message: "Can't create token");
+                return new SignUpResponse(false, Message: response.Message);
             }
 
             return new SignUpResponse(response.Success, response.AccessToken, response.RefreshToken,
@@ -32,7 +32,7 @@ public class SignUpCommandHandler : ICommandHandler<SignUpRequest, SignUpRespons
         }
         catch (Exception ex)
         {
-            return new SignUpResponse(false);
+            return new SignUpResponse(false, Message: $"Caught exception {ex.Message}");
         }
     }
 }

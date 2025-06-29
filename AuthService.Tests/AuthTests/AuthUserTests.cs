@@ -8,9 +8,11 @@ using AuthService.Shared.DTO.Auth.AuthResults;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using StackExchange.Redis;
 using Testcontainers.PostgreSql;
 using Testcontainers.Redis;
 using Xunit.Abstractions;
@@ -45,18 +47,33 @@ public class AuthUserTests : IClassFixture<WebApplicationFactory<Program>>, IAsy
         _webApplicationFactory = webApplicationFactory.WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Testing");
+            builder.ConfigureAppConfiguration((ctx, conf) =>
+            {
+                var settings = new Dictionary<string, string>
+                {
+                    ["ConnectionStrings:DefaultConnection"] = _postgreSqlContainer.GetConnectionString(),
+                    ["ConnectionStrings:Redis"] =
+                        $"{_redisContainer.Hostname}:{_redisContainer.GetMappedPublicPort(6379)}",
+                    ["JwtSettings:Issuer"] = "test-issuer",
+                    ["JwtSettings:Audience"] = "test-audience",
+                    ["JwtSettings:Key"] = "Nj8s@Z%~4vH8*91@",
+                    ["RsaKeySettings:KeyPath"] = "Keys/key.pem",
+                    ["RsaKeySettings:GenerateIfMissing"] = "true",
+                    ["RsaKeySettings:KeySize"] = "2048"
+                };
+                conf.AddInMemoryCollection(settings);
+            });
+
             builder.ConfigureServices(services =>
             {
                 services.RemoveAll<DbContextOptions<AppDbContext>>();
 
                 services.AddDbContext<AppDbContext>(options =>
-                {
-                    options.UseNpgsql(_postgreSqlContainer.GetConnectionString(), npgsqlOptions =>
-                        npgsqlOptions.MigrationsAssembly("AuthService.Infrastructure"));
-                });
+                    options.UseNpgsql(_postgreSqlContainer.GetConnectionString(),
+                        npgsql => npgsql.MigrationsAssembly("AuthService.Infrastructure")));
 
-                services.AddLogging(logBuilder => logBuilder.AddConsole().SetMinimumLevel(LogLevel.Debug));
-                services.AddMediatR(options => { options.RegisterServicesFromAssembly(typeof(Program).Assembly); });
+                services.AddLogging(log => log.AddConsole().SetMinimumLevel(LogLevel.Debug));
+                services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
             });
         });
     }
@@ -65,14 +82,46 @@ public class AuthUserTests : IClassFixture<WebApplicationFactory<Program>>, IAsy
     {
         await _postgreSqlContainer.StartAsync();
         await _redisContainer.StartAsync();
+        
+        var redisReady = false;
+        var redisConnString = $"{_redisContainer.Hostname}:{_redisContainer.GetMappedPublicPort(6379)}";
+
+        for (var i = 0; i < 10; i++)
+        {
+            try
+            {
+                var options = ConfigurationOptions.Parse(redisConnString);
+                options.AbortOnConnectFail = false;
+                await using var mux = await ConnectionMultiplexer.ConnectAsync(options);
+                
+                if (!mux.IsConnected)
+                {
+                    continue;
+                }
+                
+                var pong = await mux.GetDatabase().PingAsync();
+                redisReady = true;
+                break;
+            }
+            catch
+            {
+                await Task.Delay(1000);
+            }
+        }
+
+        if (!redisReady)
+        {
+            throw new Exception($"Redis container not ready at {redisConnString}");
+        }
 
         var connectionString = _postgreSqlContainer.GetConnectionString();
-        var options = new DbContextOptionsBuilder<AppDbContext>()
+        
+        var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>()
             .UseNpgsql(connectionString, npgsqlOptions =>
                 npgsqlOptions.MigrationsAssembly("AuthService.Infrastructure"))
             .Options;
 
-        _context = new AppDbContext(options);
+        _context = new AppDbContext(optionsBuilder);
         await _context.Database.EnsureCreatedAsync();
     }
 
@@ -108,7 +157,7 @@ public class AuthUserTests : IClassFixture<WebApplicationFactory<Program>>, IAsy
         Assert.NotNull(result);
         Assert.True(result.Success);
         Assert.NotNull(result.AccessToken);
-        
+
         foreach (var header in response.Headers)
         {
             _output.WriteLine($"Header name: {header.Key}");
@@ -251,7 +300,7 @@ public class AuthUserTests : IClassFixture<WebApplicationFactory<Program>>, IAsy
         {
             HandleCookies = false
         });
-        
+
         var email = "refresh.test@example.com";
         var password = "Password123!";
 
@@ -266,7 +315,7 @@ public class AuthUserTests : IClassFixture<WebApplicationFactory<Program>>, IAsy
                 _output.WriteLine($"  Value: {value}");
             }
         }
-        
+
         var refreshCookie = signUpResponse.Headers.GetValues("Set-Cookie")
             .FirstOrDefault(c => c.StartsWith("refreshToken="));
 
@@ -279,7 +328,7 @@ public class AuthUserTests : IClassFixture<WebApplicationFactory<Program>>, IAsy
         var response = await client.PostAsync("api/auth/refresh", null);
         var content1 = await response.Content.ReadAsStringAsync();
         _output.WriteLine(content1);
-        
+
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
@@ -386,20 +435,24 @@ public class AuthUserTests : IClassFixture<WebApplicationFactory<Program>>, IAsy
         var password = "Password123!";
 
         var signUp = await client.PostAsJsonAsync("api/auth/sign-up", new SignUpDto("Test", "User", email, password));
+
+        var signUpContent = await signUp.Content.ReadAsStringAsync();
+        _output.WriteLine(signUpContent);
+
         Assert.Equal(HttpStatusCode.OK, signUp.StatusCode);
 
         var loginResponse = await client.PostAsJsonAsync("api/auth/login", new LoginDto(email, password));
         Assert.Equal(HttpStatusCode.OK, loginResponse.StatusCode);
 
         var loginContent = await loginResponse.Content.ReadAsStringAsync();
-        
+
         var loginResult = JsonSerializer.Deserialize<LoginResultDto>(loginContent, new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
         });
 
         Assert.NotNull(loginResult);
-        
+
         client.DefaultRequestHeaders.Remove("Cookie");
         client.DefaultRequestHeaders.Add("Cookie", $"refreshToken={loginResult.RefreshToken}");
 
