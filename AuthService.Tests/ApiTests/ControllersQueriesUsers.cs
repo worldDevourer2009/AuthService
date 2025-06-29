@@ -4,10 +4,12 @@ using AuthService.Shared.DTO.Auth;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Testcontainers.PostgreSql;
+using Testcontainers.Redis;
 using Xunit.Abstractions;
 
 namespace AuthService.Tests.ApiTests;
@@ -15,6 +17,7 @@ namespace AuthService.Tests.ApiTests;
 public class ControllersQueriesUsers : IClassFixture<WebApplicationFactory<Program>>, IAsyncLifetime
 {
     private readonly PostgreSqlContainer _postgreSqlContainer;
+    private readonly RedisContainer _redisContainer;
     private readonly WebApplicationFactory<Program> _webApplicationFactory;
     private readonly ITestOutputHelper _output;
     private AppDbContext _context;
@@ -31,24 +34,40 @@ public class ControllersQueriesUsers : IClassFixture<WebApplicationFactory<Progr
             .WithCleanUp(true)
             .Build();
         
+        _redisContainer = new RedisBuilder()
+            .WithImage("redis:7-alpine")
+            .WithCleanUp(true)
+            .Build();
+        
         _webApplicationFactory = webApplicationFactory.WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Testing");
+            builder.ConfigureAppConfiguration((ctx, conf) =>
+            {
+                var settings = new Dictionary<string, string>
+                {
+                    ["ConnectionStrings:DefaultConnection"] = _postgreSqlContainer.GetConnectionString(),
+                    ["ConnectionStrings:Redis"] = $"{_redisContainer.Hostname}:{_redisContainer.GetMappedPublicPort(6379)}",
+                    ["JwtSettings:Issuer"] = "test-issuer",
+                    ["JwtSettings:Audience"] = "test-audience",
+                    ["JwtSettings:Key"] = "Nj8s@Z%~4vH8*91@",
+                    ["RsaKeySettings:KeyPath"] = "Keys/key.pem",
+                    ["RsaKeySettings:GenerateIfMissing"] = "true",
+                    ["RsaKeySettings:KeySize"] = "2048"
+                };
+                conf.AddInMemoryCollection(settings!);
+            });
+            
             builder.ConfigureServices(services =>
             {
                 services.RemoveAll<DbContextOptions<AppDbContext>>();
-
-                services.AddDbContext<AppDbContext>(options =>
-                {
-                    options.UseNpgsql(_postgreSqlContainer.GetConnectionString(), npgsqlOptions =>
-                        npgsqlOptions.MigrationsAssembly("AuthService.Infrastructure"));
-                });
                 
-                services.AddLogging(logBuilder => logBuilder.AddConsole().SetMinimumLevel(LogLevel.Debug));
-                services.AddMediatR(options =>
-                {
-                    options.RegisterServicesFromAssembly(typeof(Program).Assembly);
-                });
+                services.AddDbContext<AppDbContext>(options =>
+                    options.UseNpgsql(_postgreSqlContainer.GetConnectionString(),
+                        npgsql => npgsql.MigrationsAssembly("AuthService.Infrastructure")));
+                
+                services.AddLogging(log => log.AddConsole().SetMinimumLevel(LogLevel.Debug));
+                services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
             });
         });
     }
@@ -56,7 +75,8 @@ public class ControllersQueriesUsers : IClassFixture<WebApplicationFactory<Progr
     public async Task InitializeAsync()
     {
         await _postgreSqlContainer.StartAsync();
-
+        await _redisContainer.StartAsync();
+        
         var connectionString = _postgreSqlContainer.GetConnectionString();
         var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseNpgsql(connectionString, npgsqlOptions =>
@@ -70,6 +90,7 @@ public class ControllersQueriesUsers : IClassFixture<WebApplicationFactory<Progr
 
     public async Task DisposeAsync()
     {
+        await _redisContainer.StopAsync();
         await _postgreSqlContainer.StopAsync();
     }
 

@@ -11,6 +11,7 @@ using AuthService.Infrastructure.Persistence.Repositories;
 using AuthService.Infrastructure.Services.Passwords;
 using AuthService.Infrastructure.Services.Tokens;
 using AuthService.Infrastructure.Services.Users;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -26,9 +27,9 @@ public static class DependencyInjection
         services.AddScoped<IApplicationDbContext, AppDbContext>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IDataSeeder, DataSeeder>();
-        
+
         services.AddScoped<IPasswordService, PasswordService>();
-        
+
         services.AddSingleton<IKeyGenerator>(serviceProvider =>
         {
             var env = serviceProvider.GetRequiredService<IHostEnvironment>();
@@ -36,9 +37,9 @@ public static class DependencyInjection
             var settings = serviceProvider.GetRequiredService<IOptions<RsaKeySettings>>();
             return new RSAKeyGen(env, settings, logger);
         });
-        
+
         services.AddScoped<ITokenService, TokenService>();
-        
+
         BindUserServices(services);
         BindRedis(services);
         return services;
@@ -48,28 +49,26 @@ public static class DependencyInjection
     {
         services.AddSingleton(sp =>
         {
-            var settings = sp.GetRequiredService<IOptions<RedisSettings>>();
-            return settings.Value;
+            var config = sp.GetRequiredService<IConfiguration>();
+            var connString = config.GetConnectionString("Redis")
+                             ?? throw new InvalidOperationException("Redis connection string is not configured");
+            return new RedisSettings { ConnectionString = connString };
         });
-        
+
         services.AddSingleton<IConnectionMultiplexer>(sp =>
         {
             var settings = sp.GetRequiredService<RedisSettings>();
-            return ConnectionMultiplexer.Connect(settings.ConnectionString!);
+            var config = ConfigurationOptions.Parse(settings.ConnectionString!);
+            config.AbortOnConnectFail = false;
+            config.ConnectRetry = 3;
+            config.AsyncTimeout = 5000;
+            return ConnectionMultiplexer.Connect(config);
         });
 
         services.AddSingleton(sp =>
-        {
-            var connectionMultiplexer = sp.GetRequiredService<IConnectionMultiplexer>();
+            sp.GetRequiredService<IConnectionMultiplexer>().GetDatabase()
+        );
 
-            if (!connectionMultiplexer.IsConnected)
-            {
-                throw new Exception("Redis connection is not connected");
-            }
-            
-            return connectionMultiplexer.GetDatabase();
-        });
-        
         services.AddScoped<IRedisService, RedisService>();
     }
 

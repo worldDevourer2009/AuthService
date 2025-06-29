@@ -120,7 +120,7 @@ public class AuthController : ControllerBase
 
     private CookieOptions CreateCookieOptions(TimeSpan? expires = null)
     {
-        var isProd = _environment.IsProduction();
+        var isProd = !_environment.IsDevelopment() && !_environment.IsEnvironment("Testing");
         
         return new CookieOptions()
         {
@@ -133,7 +133,7 @@ public class AuthController : ControllerBase
 
     private void ClearCookies()
     {
-        var isProd = _environment.IsProduction();
+        var isProd = !_environment.IsDevelopment() && !_environment.IsEnvironment("Testing");
         
         var cookiesOptions = new CookieOptions()
         {
