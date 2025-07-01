@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ "main" ]
 
+env:
+  DOCKER_REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/authservice-api
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
@@ -140,3 +144,31 @@ jobs:
           path: |
             **/*.log
             **/bin/**/*.log
+            
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./AuthService.API/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            NUGET_TOKEN=${{ secrets.NUGET_TOKEN }}
+    
+      - name: Deploy to server
+        run: |
+         docker network create microservices-network || true
+        
+         if ! docker exec kafka kafka-topics --bootstrap-server localhost:9092 --list > /dev/null 2>&1; then
+          echo "Kafka is not running. Starting infrastructure..."
+
+         fi
+        
+         export IMAGE_TAG=${{ github.sha }}
+         export DOCKER_REGISTRY=${{ env.DOCKER_REGISTRY }}/
+         export ASPNETCORE_ENVIRONMENT=Production
+        
+         docker-compose down || true
+         docker-compose up -d         
+        
