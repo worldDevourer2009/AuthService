@@ -156,7 +156,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: type=sha                  # в PR работает всегда
+          tags: type=sha
           labels: |
             maintainer=worldDevourer2009
 
@@ -172,7 +172,7 @@ jobs:
         with:
           context: .
           file: ./AuthService.API/Dockerfile
-          push: true
+          push: false
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
@@ -187,7 +187,6 @@ jobs:
         run: |
           mkdir -p infrastructure/Keys
           echo "${{ secrets.PRIVATE_KEY_PEM }}" > Keys/key.pem
-          # Меняем права, чтобы контейнер мог читать файл
           chmod 600 infrastructure/Keys/key.pem    
 
       - name: Deploy infrastructure and services
