@@ -41,10 +41,10 @@ builder.Services
 
 builder.WebHost.ConfigureKestrel(options =>
 {
-    options.ListenLocalhost(9500, op =>
+    options.ListenAnyIP(80);
+    options.ListenLocalhost(9500, options =>
     {
-        op.UseHttps();
-    } );
+    });
 });
 
 builder.Services.AddInfrastructure();

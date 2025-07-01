@@ -6,6 +6,12 @@ FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["AuthService.API/AuthService.API.csproj", "AuthService.API/"]
+ARG NUGET_TOKEN
+RUN dotnet nuget add source "https://nuget.pkg.github.com/worldDevourer2009/index.json" \
+  --name github \
+  --username worldDevourer2009 \
+  --password $NUGET_TOKEN \
+  --store-password-in-clear-text
 RUN dotnet restore "AuthService.API/AuthService.API.csproj"
 COPY ["AuthService.API/Keys/", "Keys/"]
 COPY . .

@@ -3,20 +3,29 @@ services:
     image: authservice-api
     build:
       dockerfile: AuthService.API/Dockerfile
+      args:
+        NUGET_TOKEN: ${NUGET_TOKEN}
     ports:
       - "9000:80"
       - "9001:443"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+80;https://+443
-    entrypoint: 
+      - ConnectionStrings__DefaultConnection=Host=authService-db;Port=5432;Database=authService;Username=authService_user;Password=authService_password;Include Error Detail=true
+      - ConnectionStrings__Redis=authService-redis:6379
+    entrypoint:
       - "dotnet"
       - "AuthService.API.dll"
-    volumes: 
+    volumes:
       - "users_data:/app/data"
+    networks:
+      - authService-network
+    depends_on:
+      authService-db:
+        condition: service_healthy
   authService-db:
     image: postgres:15
-    container_name: authService-postgres
+    container_name: authService-db
     environment:
       POSTGRES_DB: authService
       POSTGRES_USER: authService_user
@@ -40,7 +49,7 @@ services:
       - "9532:6379"
     volumes:
       - authService_redis_data:/var/lib/redis/data
-    restart: 
+    restart:
       unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -49,7 +58,7 @@ services:
       retries: 5
     networks:
       - authService-network
-      
+
 volumes:
   users_data:
     external: true
@@ -59,3 +68,4 @@ volumes:
 networks:
   authService-network:
     driver: bridge
+    external: true
