@@ -64,7 +64,6 @@ services:
       - authService-network
 volumes:
   users_data:
-    external: true
   auth_postgres_data:
   authService_redis_data:
 
