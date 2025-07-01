@@ -1,5 +1,7 @@
 using AuthService.Application.Queries.Users;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using TaskHandler.Shared.DTO.Users.Queries;
 
 namespace AuthService.API.Controllers;
 
@@ -14,11 +16,20 @@ public class UserController : ControllerBase
         _mediator = mediator;
     }
 
-    [HttpGet]
-    [Route("get-user-id")]
-    public async Task<IActionResult> GetUserById([FromBody] GetUserByIdDto entry)
+    [HttpGet("{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetUserById(string id)
     {
-        var request = new GetUserByIdRequest(entry.Id);
+        var idGuid = Guid.Parse(id);
+
+        if (idGuid == Guid.Empty)
+        {
+            return BadRequest(new { Success = false, Message = "Invalid Id" });
+        }
+        
+        var request = new GetUserByIdRequest(idGuid);
 
         var response = await _mediator.Send(request);
 
@@ -26,15 +37,32 @@ public class UserController : ControllerBase
         {
             return BadRequest(new { Success = response.Success, Message = response.User });
         }
+        var user = response.User;
         
-        return Ok(new { Success = response.Success, User = response.User });
+        if (user is null)
+        {
+            return BadRequest(new { Success = response.Success, Message = response.User });
+        }
+        
+        return Ok(new UserDto()
+        {
+            Id = user.UserIdentity.Id,
+            FirstName = user.UserIdentity.FirstName!,
+            LastName = user.UserIdentity.LastName!,
+            Email = user.Email.EmailAddress!,
+            CreatedAt = user.CreatedAt,
+            LastLogin = user.LastLogin,
+            IsActive = user.IsActive,
+        });
     }
 
-    [HttpGet]
-    [Route("get-user-email")]
-    public async Task<IActionResult> GetUserByEmail([FromBody] GetUserByEmailDto entry)
+    [HttpGet("by-email")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetUserByEmail([FromQuery] string email)
     {
-        var request = new GetUserByEmailQueryRequest(entry.Email);
+        var request = new GetUserByEmailQueryRequest(email);
         
         var response = await _mediator.Send(request);
 
@@ -43,6 +71,22 @@ public class UserController : ControllerBase
             return BadRequest(new {Success = response.Success, User = response.User});
         }
         
-        return Ok(new {Success = response.Success, User = response.User});
+        var user = response.User;
+        
+        if (user is null)
+        {
+            return BadRequest(new { Success = response.Success, Message = response.User });
+        }
+        
+        return Ok(new UserDto()
+        {
+            Id = user.UserIdentity.Id,
+            FirstName = user.UserIdentity.FirstName!,
+            LastName = user.UserIdentity.LastName!,
+            Email = user.Email.EmailAddress!,
+            CreatedAt = user.CreatedAt,
+            LastLogin = user.LastLogin,
+            IsActive = user.IsActive,
+        });
     }
 }

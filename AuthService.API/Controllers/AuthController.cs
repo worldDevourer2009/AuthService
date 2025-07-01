@@ -1,8 +1,8 @@
 using AuthService.Application.Commands.CommandHandlers.Auth;
-using AuthService.Shared.DTO.Auth;
-using AuthService.Shared.DTO.Auth.AuthResults;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using TaskHandler.Shared.DTO.Auth;
+using TaskHandler.Shared.DTO.Auth.AuthResults;
 
 namespace AuthService.API.Controllers;
 

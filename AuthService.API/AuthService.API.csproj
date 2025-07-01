@@ -33,6 +33,5 @@
 
     <ItemGroup>
       <ProjectReference Include="..\AuthService.Infrastructure\AuthService.Infrastructure.csproj" />
-      <ProjectReference Include="..\AuthService.Shared\AuthService.Shared.csproj" />
     </ItemGroup>
 </Project>

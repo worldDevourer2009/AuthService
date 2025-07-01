@@ -1,6 +1,5 @@
 using System.Net.Http.Json;
 using AuthService.Infrastructure.Persistence;
-using AuthService.Shared.DTO.Auth;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -8,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using TaskHandler.Shared.DTO.Auth;
 using Testcontainers.PostgreSql;
 using Testcontainers.Redis;
 using Xunit.Abstractions;
