@@ -81,9 +81,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: worldDevourer2009/TaskHandler-Services-Infrastructure
-          token: ${{ secrets.GITHUB_TOKEN }}
-          path: infrastructure            
-            
+          token: ${{ secrets.INFRA_REPO_TOKEN }}
+          ref: main
+          path: infrastructure
+
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
@@ -91,7 +92,7 @@ jobs:
 
       - name: Install PostgreSQL and Redis clients
         run: sudo apt-get update && sudo apt-get install -y postgresql-client redis-tools
-        
+
       - name: Configure GitHub NuGet source with authentication
         run: |
           dotnet nuget add source "https://nuget.pkg.github.com/worldDevourer2009/index.json" \
@@ -99,7 +100,7 @@ jobs:
             --username ${{ github.actor }} \
             --password ${{ secrets.NUGET_TOKEN }} \
             --store-password-in-clear-text
-      
+
       - name: Restore dependencies
         run: dotnet restore --verbosity normal
 
@@ -115,7 +116,6 @@ jobs:
             sleep 2
           done
           echo "PostgreSQL is ready!"
-
           echo "Waiting for Redis to be ready..."
           until redis-cli -h localhost -p 6379 ping | grep -q PONG; do
             sleep 2
@@ -133,8 +133,7 @@ jobs:
           dotnet test --no-build --configuration Release \
             --logger "trx;LogFileName=test_results.trx" \
             --results-directory TestResults \
-            --verbosity normal \
-            -- RunConfiguration.EnvironmentVariables.ASPNETCORE_ENVIRONMENT=Testing
+            --verbosity normal
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
@@ -151,15 +150,13 @@ jobs:
           path: |
             **/*.log
             **/bin/**/*.log
-            
+
       - name: Set up Docker metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=sha
-            type=ref,pattern=refs/tags/v*.*.*
+          tags: type=sha                  # в PR работает всегда
           labels: |
             maintainer=worldDevourer2009
 
@@ -181,6 +178,11 @@ jobs:
           build-args: |
             NUGET_TOKEN=${{ secrets.NUGET_TOKEN }}
 
+      - name: Install Docker Compose CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
       - name: Deploy infrastructure and services
         run: |
           cd infrastructure
@@ -189,6 +191,7 @@ jobs:
           docker network create microservices-network || true
           export IMAGE_TAG=${{ github.sha }}
           export DOCKER_REGISTRY=${{ env.DOCKER_REGISTRY }}
+          export IMAGE_NAME=${{ env.IMAGE_NAME }}
           export ASPNETCORE_ENVIRONMENT=Production
           docker-compose down || true
           docker-compose up -d
