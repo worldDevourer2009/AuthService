@@ -193,6 +193,10 @@ jobs:
         run: |
           docker network create microservices || echo "Network already exists"
           
+      - name: Create Docker network "authService-network"
+        run: |
+          docker network create authService-network || echo "Network already exists"          
+          
       - name: Export NUGET_TOKEN for Docker Compose
         run: echo "NUGET_TOKEN=${{ secrets.NUGET_TOKEN }}" >> $GITHUB_ENV    
 
