@@ -2,6 +2,7 @@ services:
   authService-api:
     image: authservice-api
     build:
+      context: .
       dockerfile: AuthService.API/Dockerfile
       args:
         NUGET_TOKEN: ${NUGET_TOKEN}
