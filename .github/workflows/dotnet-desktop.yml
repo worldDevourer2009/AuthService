@@ -81,8 +81,23 @@ jobs:
       - name: Install PostgreSQL and Redis clients
         run: sudo apt-get update && sudo apt-get install -y postgresql-client redis-tools
         
-      - name: Add GitHub NuGet source
-        run: dotnet nuget add source "https://nuget.pkg.github.com/worldDevourer2009/index.json" --name github --username worldDevourer2009 --password ${{ secrets.NUGET_TOKEN }} --store-password-in-clear-text
+      - name: Create NuGet.config for GitHub packages
+        run: |
+          cat > nuget.config << EOF
+          <?xml version="1.0" encoding="utf-8"?>
+          <configuration>
+            <packageSources>
+              <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+              <add key="github" value="https://nuget.pkg.github.com/worldDevourer2009/index.json" />
+            </packageSources>
+            <packageSourceCredentials>
+              <github>
+                <add key="Username" value="worldDevourer2009" />
+                <add key="ClearTextPassword" value="${{ secrets.NUGET_TOKEN }}" />
+              </github>
+            </packageSourceCredentials>
+          </configuration>
+          EOF
       
       - name: Restore dependencies
         run: dotnet restore --verbosity normal
