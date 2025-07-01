@@ -13,7 +13,6 @@ RUN dotnet nuget add source "https://nuget.pkg.github.com/worldDevourer2009/inde
   --password $NUGET_TOKEN \
   --store-password-in-clear-text
 RUN dotnet restore "AuthService.API/AuthService.API.csproj"
-COPY ["AuthService.API/Keys/", "Keys/"]
 COPY . .
 WORKDIR "/src/AuthService.API"
 RUN dotnet build "./AuthService.API.csproj" -c $BUILD_CONFIGURATION -o /app/build
