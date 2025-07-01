@@ -192,6 +192,9 @@ jobs:
       - name: Create Docker network "microservices"
         run: |
           docker network create microservices || echo "Network already exists"
+          
+      - name: Export NUGET_TOKEN for Docker Compose
+        run: echo "NUGET_TOKEN=${{ secrets.NUGET_TOKEN }}" >> $GITHUB_ENV    
 
       - name: Deploy infrastructure and services
         run: |
