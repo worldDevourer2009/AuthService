@@ -189,6 +189,10 @@ jobs:
           echo "${{ secrets.PRIVATE_KEY_PEM }}" > AuthService.API/Keys/key.pem
           chmod 600 AuthService.API/Keys/key.pem  
 
+      - name: Create Docker network "microservices"
+        run: |
+          docker network create microservices || echo "Network already exists"
+
       - name: Deploy infrastructure and services
         run: |
           cd infrastructure
