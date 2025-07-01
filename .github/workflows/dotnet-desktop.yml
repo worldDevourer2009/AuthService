@@ -82,11 +82,12 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y postgresql-client redis-tools
         
       - name: Add GitHub NuGet source
-        run: dotnet nuget add source \
-          --username worldDevourer2009 \
-          --password ${{ secrets.NUGET_TOKEN }} \
-          --store-password-in-clear-text \
-          --name github "https://nuget.pkg.github.com/worldDevourer2009/index.json" 
+        run: |
+          dotnet nuget add source "https://nuget.pkg.github.com/worldDevourer2009/index.json" \
+            --name github \
+            --username worldDevourer2009 \
+            --password ${{ secrets.NUGET_TOKEN }} \
+            --store-password-in-clear-text
       
       - name: Restore dependencies
         run: dotnet restore --verbosity normal
