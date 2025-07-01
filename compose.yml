@@ -19,6 +19,7 @@ services:
       - "AuthService.API.dll"
     volumes:
       - "users_data:/app/data"
+      - "./Keys:/app/Keys:ro"
     networks:
       - authService-network
       - microservices

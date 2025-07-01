@@ -182,6 +182,13 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y docker-compose
+          
+      - name: Prepare Keys directory
+        run: |
+          mkdir -p infrastructure/Keys
+          echo "${{ secrets.PRIVATE_KEY_PEM }}" > Keys/key.pem
+          # Меняем права, чтобы контейнер мог читать файл
+          chmod 600 infrastructure/Keys/key.pem    
 
       - name: Deploy infrastructure and services
         run: |
