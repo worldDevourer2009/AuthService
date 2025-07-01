@@ -77,6 +77,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-
 
+      - name: Checkout infrastructure repo
+        uses: actions/checkout@v4
+        with:
+          repository: worldDevourer2009/TaskHandler-Services-Infrastructure
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: infrastructure            
+            
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
@@ -145,6 +152,24 @@ jobs:
             **/*.log
             **/bin/**/*.log
             
+      - name: Set up Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha
+            type=ref,pattern=refs/tags/v*.*.*
+          labels: |
+            maintainer=worldDevourer2009
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
@@ -155,20 +180,15 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             NUGET_TOKEN=${{ secrets.NUGET_TOKEN }}
-    
-      - name: Deploy to server
-        run: |
-         docker network create microservices-network || true
-        
-         if ! docker exec kafka kafka-topics --bootstrap-server localhost:9092 --list > /dev/null 2>&1; then
-          echo "Kafka is not running. Starting infrastructure..."
 
-         fi
-        
-         export IMAGE_TAG=${{ github.sha }}
-         export DOCKER_REGISTRY=${{ env.DOCKER_REGISTRY }}/
-         export ASPNETCORE_ENVIRONMENT=Production
-        
-         docker-compose down || true
-         docker-compose up -d         
-        
+      - name: Deploy infrastructure and services
+        run: |
+          cd infrastructure
+          docker-compose up -d
+          cd ..
+          docker network create microservices-network || true
+          export IMAGE_TAG=${{ github.sha }}
+          export DOCKER_REGISTRY=${{ env.DOCKER_REGISTRY }}
+          export ASPNETCORE_ENVIRONMENT=Production
+          docker-compose down || true
+          docker-compose up -d
