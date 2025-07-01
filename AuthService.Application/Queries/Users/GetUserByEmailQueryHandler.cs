@@ -1,7 +1,7 @@
 namespace AuthService.Application.Queries.Users;
 
 public record GetUserByEmailQueryRequest(string? Email) : IQuery<GetUserByEmailQueryResponse>;
-public record GetUserByEmailQueryResponse(User User, bool Success);
+public record GetUserByEmailQueryResponse(User? User, bool Success);
 
 public class GetUserByEmailQueryHandler : IQueryHandler<GetUserByEmailQueryRequest, GetUserByEmailQueryResponse>
 {
