@@ -185,9 +185,9 @@ jobs:
           
       - name: Prepare Keys directory
         run: |
-          mkdir -p infrastructure/Keys
-          echo "${{ secrets.PRIVATE_KEY_PEM }}" > Keys/key.pem
-          chmod 600 infrastructure/Keys/key.pem    
+          mkdir -p AuthService.API/Keys
+          echo "${{ secrets.PRIVATE_KEY_PEM }}" > AuthService.API/Keys/key.pem
+          chmod 600 AuthService.API/Keys/key.pem  
 
       - name: Deploy infrastructure and services
         run: |
