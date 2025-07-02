@@ -33,7 +33,7 @@ public class UnitTest1
         var user2 = User.Create("Boris", "Doe", "hello_world_2@gmail.com", passwordHashed2);
         
         //Setup
-        Assert.NotEqual(user1.UserIdentity.Id, user2.UserIdentity.Id);
+        Assert.NotEqual(user1.Id, user2.Id);
     }
     
     [Fact]

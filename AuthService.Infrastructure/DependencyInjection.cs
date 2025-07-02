@@ -1,4 +1,5 @@
-﻿using AuthService.Application.Options;
+﻿using AuthService.Application.Interfaces;
+using AuthService.Application.Options;
 using AuthService.Application.Services;
 using AuthService.Application.Services.Repositories;
 using AuthService.Domain.Services.Passwords;
@@ -8,9 +9,11 @@ using AuthService.Infrastructure.Interfaces;
 using AuthService.Infrastructure.Persistence;
 using AuthService.Infrastructure.Persistence.Redis;
 using AuthService.Infrastructure.Persistence.Repositories;
+using AuthService.Infrastructure.Services.Kafka;
 using AuthService.Infrastructure.Services.Passwords;
 using AuthService.Infrastructure.Services.Tokens;
 using AuthService.Infrastructure.Services.Users;
+using Confluent.Kafka;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -39,10 +42,38 @@ public static class DependencyInjection
         });
 
         services.AddScoped<ITokenService, TokenService>();
-
+        
+        BindKafka(services);
         BindUserServices(services);
         BindRedis(services);
+        
         return services;
+    }
+
+    private static void BindKafka(IServiceCollection services)
+    {
+        services.AddSingleton<IProducer<string, string>>(sp =>
+        {
+            var options = sp.GetRequiredService<IOptions<KafkaSettings>>().Value;
+            
+            var kafkaConfig = new ProducerConfig
+            {
+                BootstrapServers = options.BootstrapServers,
+                ClientId = options.ClientId,
+                MessageTimeoutMs = options.MessageTimeoutMs,
+            };
+            
+            var producerBuilder = new ProducerBuilder<string, string>(kafkaConfig);
+            return producerBuilder.Build();
+        });
+
+        services.AddSingleton<IKafkaProducer>(sp =>
+        {
+            var producer = sp.GetRequiredService<IProducer<string, string>>();
+            var logger = sp.GetRequiredService<ILogger<KafkaProducer>>();
+            
+            return new KafkaProducer(producer, logger);
+        });
     }
 
     private static void BindRedis(IServiceCollection services)

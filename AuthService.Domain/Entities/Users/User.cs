@@ -1,6 +1,9 @@
+using AuthService.Domain.DomainEvents.Auth;
+using AuthService.Domain.VO;
+
 namespace AuthService.Domain.Entities.Users;
 
-public class User : ValueObject
+public class User : Entity
 {
     public UserIdentity UserIdentity { get; private set; }
     public Email Email { get; private set; }
@@ -10,13 +13,13 @@ public class User : ValueObject
     public DateTime? LastLogin { get; private set; }
     public bool? IsActive { get; private set; }
 
-    private User()
+    private User() : base()
     {
     }
 
     public static User Create(string firstName, string lastName, string email, string password)
     {
-        return new User
+        var user = new User
         {
             UserIdentity = UserIdentity.Create(firstName, lastName),
             Email = Email.Create(email),
@@ -25,11 +28,22 @@ public class User : ValueObject
             LastLogin = DateTime.UtcNow,
             IsActive = false,
         };
+        
+        user.AddDomainEvent(new UserSignedUpDomainEvent(
+            nameof(UserSignedUpDomainEvent),
+            user.UserIdentity.FirstName!,
+            user.Email.EmailAddress!
+        ));
+        
+        return user;
     }
 
     public void UpdateLastLogin()
     {
         LastLogin = DateTime.UtcNow;
+        AddDomainEvent(new UserLoggedInDomainEvent(nameof(UserLoggedInDomainEvent),
+            UserIdentity.FirstName!,
+            Email.EmailAddress!));
     }
 
     public void SetIpAddress(string ipAddress)
@@ -42,15 +56,17 @@ public class User : ValueObject
         Password = Password.Create(password);
     }
 
+    public void SetNewEmail(string email)
+    {
+        Email = Email.Create(email);
+    }
+
     public void SetInactive()
     {
         IsActive = false;
-    }
-    
-    public override IEnumerable<object?> GetEqualityComponents()
-    {
-        yield return UserIdentity;
-        yield return Email;
-        yield return IpAddress;
+        
+        AddDomainEvent(new UserLoggedOutDomainEvent(nameof(UserLoggedOutDomainEvent),
+            UserIdentity.FirstName!,
+            Email.EmailAddress!));
     }
 }

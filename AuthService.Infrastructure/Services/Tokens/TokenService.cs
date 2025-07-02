@@ -52,7 +52,7 @@ public class TokenService : ITokenService
         
         var claims = new[]
         {
-            new Claim(JwtRegisteredClaimNames.Sub, user.UserIdentity.Id.ToString()!),
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()!),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
@@ -77,10 +77,10 @@ public class TokenService : ITokenService
         using var rng = RandomNumberGenerator.Create();
         rng.GetBytes(randomNumber);
         var refreshToken = Convert.ToBase64String(randomNumber);
-        var redisKey = GetTokenKey(RefreshTokenKey, user.UserIdentity.Id.ToString()!);
+        var redisKey = GetTokenKey(RefreshTokenKey, user.Id.ToString()!);
         
         await _redisService.SetAsync(redisKey, refreshToken, RefreshTokenLifeTime, cancellationToken);
-        await _redisService.SetAsync(GetUserIdKey(refreshToken), user.UserIdentity.Id.ToString()!, RefreshTokenLifeTime, cancellationToken);
+        await _redisService.SetAsync(GetUserIdKey(refreshToken), user.Id.ToString()!, RefreshTokenLifeTime, cancellationToken);
         return refreshToken;
     }
 
@@ -124,7 +124,7 @@ public class TokenService : ITokenService
 
         try
         {
-            var redisKey = GetTokenKey(RefreshTokenKey, user.UserIdentity.Id.ToString()!);
+            var redisKey = GetTokenKey(RefreshTokenKey, user.Id.ToString()!);
             var oldToken = await _redisService.GetAsync(redisKey, cancellationToken);
             
             var lookupKey = GetUserIdKey(oldToken!);
@@ -146,8 +146,8 @@ public class TokenService : ITokenService
 
         try
         {
-            var refreshRedisKey = GetTokenKey(RefreshTokenKey, user.UserIdentity.Id.ToString()!);
-            var accessRedisKey = GetTokenKey(AccessTokenKey, user.UserIdentity.Id.ToString()!);
+            var refreshRedisKey = GetTokenKey(RefreshTokenKey, user.Id.ToString()!);
+            var accessRedisKey = GetTokenKey(AccessTokenKey, user.Id.ToString()!);
             await _redisService.RemoveAsync(refreshRedisKey, cancellationToken);
             await _redisService.RemoveAsync(accessRedisKey, cancellationToken);
             return true;
@@ -187,7 +187,7 @@ public class TokenService : ITokenService
 
         try
         {
-            var refreshRedisKey = GetTokenKey(RefreshTokenKey, user.UserIdentity.Id.ToString()!);
+            var refreshRedisKey = GetTokenKey(RefreshTokenKey, user.Id.ToString()!);
             return !await _redisService.ExistsAsync(refreshRedisKey, cancellationToken);
         }
         catch (Exception ex)

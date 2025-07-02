@@ -46,7 +46,7 @@ public class UserController : ControllerBase
         
         return Ok(new UserDto()
         {
-            Id = user.UserIdentity.Id,
+            Id = user.Id,
             FirstName = user.UserIdentity.FirstName!,
             LastName = user.UserIdentity.LastName!,
             Email = user.Email.EmailAddress!,
@@ -80,7 +80,7 @@ public class UserController : ControllerBase
         
         return Ok(new UserDto()
         {
-            Id = user.UserIdentity.Id,
+            Id = user.Id,
             FirstName = user.UserIdentity.FirstName!,
             LastName = user.UserIdentity.LastName!,
             Email = user.Email.EmailAddress!,

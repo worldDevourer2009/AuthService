@@ -2,7 +2,6 @@ namespace AuthService.Domain.Entities.Users;
 
 public class UserIdentity : ValueObject
 {
-    public Guid? Id { get; private set; }
     public string? FirstName { get; private set; }
     public string? LastName { get; private set; }
     
@@ -14,7 +13,6 @@ public class UserIdentity : ValueObject
     {
         return new UserIdentity
         {
-            Id = Guid.NewGuid(),
             FirstName = firstName,
             LastName = lastName,
         };

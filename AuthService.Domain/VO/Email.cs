@@ -1,4 +1,6 @@
-namespace AuthService.Domain.Entities.Users;
+using AuthService.Domain.Entities;
+
+namespace AuthService.Domain.VO;
 
 public class Email : ValueObject
 {

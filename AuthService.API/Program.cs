@@ -36,6 +36,10 @@ builder.Services
     .Bind(builder.Configuration.GetSection("Redis"));
 
 builder.Services
+    .AddOptions<KafkaSettings>()
+    .Bind(builder.Configuration.GetSection("Kafka"));
+
+builder.Services
     .AddOptions<RsaKeySettings>()
     .Bind(builder.Configuration.GetSection("RsaKeySettings"));
 
