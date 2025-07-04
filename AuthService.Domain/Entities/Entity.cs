@@ -44,7 +44,7 @@ public abstract class Entity
             return false;
         }
         
-        return Id.Equals(other.Id);
+        return Id == other.Id;
     }
     
     public override int GetHashCode()

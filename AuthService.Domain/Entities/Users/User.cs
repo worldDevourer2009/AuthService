@@ -30,7 +30,7 @@ public class User : Entity
         };
         
         user.AddDomainEvent(new UserSignedUpDomainEvent(
-            nameof(UserSignedUpDomainEvent),
+            "user-signed-up",
             user.UserIdentity.FirstName!,
             user.Email.EmailAddress!
         ));
@@ -41,7 +41,7 @@ public class User : Entity
     public void UpdateLastLogin()
     {
         LastLogin = DateTime.UtcNow;
-        AddDomainEvent(new UserLoggedInDomainEvent(nameof(UserLoggedInDomainEvent),
+        AddDomainEvent(new UserLoggedInDomainEvent("user-logged-in",
             UserIdentity.FirstName!,
             Email.EmailAddress!));
     }
@@ -65,7 +65,7 @@ public class User : Entity
     {
         IsActive = false;
         
-        AddDomainEvent(new UserLoggedOutDomainEvent(nameof(UserLoggedOutDomainEvent),
+        AddDomainEvent(new UserLoggedOutDomainEvent("user-logged-out",
             UserIdentity.FirstName!,
             Email.EmailAddress!));
     }

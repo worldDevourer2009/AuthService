@@ -20,7 +20,7 @@ public class AppDbContext : DbContext, IApplicationDbContext
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.ToTable("Users");
+            entity.ToTable("users");
             
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id)

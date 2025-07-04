@@ -3,10 +3,10 @@ using Microsoft.Extensions.Logging;
 
 namespace AuthService.Application.Commands.CommandHandlers.Auth;
 
-public record RefreshTokensRequest(string? RefreshToken) : ICommand<RefreshTokensResponse>;
+public record RefreshTokensCommand(string? RefreshToken) : ICommand<RefreshTokensResponse>;
 public record RefreshTokensResponse(bool Success, string? AccessToken = null, string? RefreshToken = null, string? Message = null);
 
-public class RefreshTokensCommandHandler : ICommandHandler<RefreshTokensRequest, RefreshTokensResponse>
+public class RefreshTokensCommandHandler : ICommandHandler<RefreshTokensCommand, RefreshTokensResponse>
 {
     private readonly ITokenService _tokenService;
     private readonly ILogger<RefreshTokensCommandHandler> _logger;
@@ -17,17 +17,17 @@ public class RefreshTokensCommandHandler : ICommandHandler<RefreshTokensRequest,
         _logger = logger;
     }
 
-    public async Task<RefreshTokensResponse> Handle(RefreshTokensRequest request, CancellationToken cancellationToken)
+    public async Task<RefreshTokensResponse> Handle(RefreshTokensCommand command, CancellationToken cancellationToken)
     {
         
-        if (string.IsNullOrWhiteSpace(request.RefreshToken))
+        if (string.IsNullOrWhiteSpace(command.RefreshToken))
         {
             return new RefreshTokensResponse(false, Message: "Refresh token is required");
         }
 
         try
         {
-            var user = await _tokenService.GetUserByRefreshToken(request.RefreshToken, cancellationToken);
+            var user = await _tokenService.GetUserByRefreshToken(command.RefreshToken, cancellationToken);
 
             if (user! == null)
             {

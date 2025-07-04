@@ -27,10 +27,22 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services)
     {
-        services.AddScoped<IApplicationDbContext, AppDbContext>();
-        services.AddScoped<IUserRepository, UserRepository>();
-        services.AddScoped<IDataSeeder, DataSeeder>();
+        BindDB(services);
+        BindPasswordsServices(services);
+        BindTokens(services);
+        BindKafka(services);
+        BindUserServices(services);
+        BindRedis(services);
+        return services;
+    }
 
+    private static void BindTokens(IServiceCollection services)
+    {
+        services.AddScoped<ITokenService, TokenService>();
+    }
+
+    private static void BindPasswordsServices(IServiceCollection services)
+    {
         services.AddScoped<IPasswordService, PasswordService>();
 
         services.AddSingleton<IKeyGenerator>(serviceProvider =>
@@ -40,14 +52,13 @@ public static class DependencyInjection
             var settings = serviceProvider.GetRequiredService<IOptions<RsaKeySettings>>();
             return new RSAKeyGen(env, settings, logger);
         });
+    }
 
-        services.AddScoped<ITokenService, TokenService>();
-        
-        BindKafka(services);
-        BindUserServices(services);
-        BindRedis(services);
-        
-        return services;
+    private static void BindDB(IServiceCollection services)
+    {
+        services.AddScoped<IApplicationDbContext, AppDbContext>();
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IDataSeeder, DataSeeder>();
     }
 
     private static void BindKafka(IServiceCollection services)
@@ -105,6 +116,7 @@ public static class DependencyInjection
 
     private static void BindUserServices(IServiceCollection services)
     {
+        services.AddScoped<IUserService, UserService>();
         services.AddScoped<IUserSignUpService, UserSignUpService>();
         services.AddScoped<IUserLoginService, UserLoginService>();
         services.AddScoped<IUserLogoutService, UserLogoutService>();

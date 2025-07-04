@@ -26,4 +26,13 @@
       <ProjectReference Include="..\AuthService.Domain\AuthService.Domain.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Reference Include="Confluent.Kafka">
+        <HintPath>..\..\..\.nuget\packages\confluent.kafka\2.10.1\lib\net8.0\Confluent.Kafka.dll</HintPath>
+      </Reference>
+      <Reference Include="Microsoft.Extensions.Logging.Abstractions">
+        <HintPath>..\..\..\.nuget\packages\microsoft.extensions.logging.abstractions\9.0.6\lib\net9.0\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
 </Project>

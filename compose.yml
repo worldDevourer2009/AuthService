@@ -27,6 +27,8 @@ services:
     depends_on:
       authService-db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
   authService-db:
     image: postgres:15
     container_name: authService-db
