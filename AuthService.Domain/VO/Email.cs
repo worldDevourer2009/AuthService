@@ -1,9 +1,13 @@
+using System.Text.RegularExpressions;
 using AuthService.Domain.Entities;
+using AuthService.Domain.Exceptions.VO;
 
 namespace AuthService.Domain.VO;
 
-public class Email : ValueObject
+public partial class Email : ValueObject
 {
+    private static readonly Regex EmailRegex = MyRegex();
+    
     public string? EmailAddress { get; private set; }
     
     private Email()
@@ -12,9 +16,9 @@ public class Email : ValueObject
 
     public static Email Create(string? emailAddress)
     {
-        if (emailAddress == null || !emailAddress.Contains('@'))
+        if (string.IsNullOrWhiteSpace(emailAddress) || !EmailRegex.IsMatch(emailAddress))
         {
-            throw new Exception("Invalid email");
+            throw new InvalidEmailException("Invalid email format.");
         }
         
         return new Email
@@ -27,4 +31,7 @@ public class Email : ValueObject
     {
         yield return EmailAddress;
     }
+
+    [GeneratedRegex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.IgnoreCase | RegexOptions.Compiled, "fr-US")]
+    private static partial Regex MyRegex();
 }

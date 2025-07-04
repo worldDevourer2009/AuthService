@@ -7,7 +7,7 @@ public class User : Entity
 {
     public UserIdentity UserIdentity { get; private set; }
     public Email Email { get; private set; }
-    public Password Password { get; private set; }
+    public VO.Password Password { get; private set; }
     public string? IpAddress { get; private set; }
     public DateTime? CreatedAt { get; private set; }
     public DateTime? LastLogin { get; private set; }
@@ -23,7 +23,7 @@ public class User : Entity
         {
             UserIdentity = UserIdentity.Create(firstName, lastName),
             Email = Email.Create(email),
-            Password = Password.Create(password),
+            Password = VO.Password.Create(password),
             CreatedAt = DateTime.UtcNow,
             LastLogin = DateTime.UtcNow,
             IsActive = false,
@@ -63,7 +63,7 @@ public class User : Entity
 
     public void SetNewPassword(string password)
     {
-        Password = Password.Create(password);
+        Password = VO.Password.Create(password);
     }
 
     public void SetNewEmail(string email)

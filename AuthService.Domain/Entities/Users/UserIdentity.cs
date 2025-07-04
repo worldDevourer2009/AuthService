@@ -1,3 +1,5 @@
+using AuthService.Domain.Exceptions.Entities;
+
 namespace AuthService.Domain.Entities.Users;
 
 public class UserIdentity : ValueObject
@@ -11,6 +13,16 @@ public class UserIdentity : ValueObject
 
     public static UserIdentity Create(string firstName, string lastName)
     {
+        if (firstName.Length < 2)
+        {
+            throw new InvalidUserIdentity("First name should be longer");
+        }
+        
+        if (lastName.Length < 2)
+        {
+            throw new InvalidUserIdentity("Last name should be longer");
+        }
+        
         return new UserIdentity
         {
             FirstName = firstName,

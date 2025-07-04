@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
+using AuthService.API.Middleware.Exceptions;
 using AuthService.Application;
 using AuthService.Application.Options;
 using AuthService.Application.Services;
@@ -19,6 +20,8 @@ using Microsoft.IdentityModel.Tokens;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddMediatR(config => { config.RegisterServicesFromAssembly(typeof(Program).Assembly); });
+
+// Bind options
 
 builder.Services.AddNpgsql<AppDbContext>(
     builder.Configuration.GetConnectionString("DefaultConnection"),
@@ -53,9 +56,14 @@ builder.WebHost.ConfigureKestrel(options =>
     options.ListenLocalhost(9500, options => { });
 });
 
+// Bind infrastructure layer
 builder.Services.AddInfrastructure();
+
+// Bind application layer
 builder.Services.AddApplication();
 
+
+// Bind rate limiter
 builder.Services.AddRateLimiter(options =>
 {
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
@@ -69,6 +77,8 @@ builder.Services.AddRateLimiter(options =>
                 Window = TimeSpan.FromMinutes(1)
             }));
 });
+
+// Auth and Authorization
 
 builder.Services.AddAuthorization(options =>
 {
@@ -177,12 +187,17 @@ builder.Services
         };
     });
 
+//Exceptions
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
+//Controllers
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
 });
 
+//Logging
 builder.Services.AddLogging();
 
 var app = builder.Build();
