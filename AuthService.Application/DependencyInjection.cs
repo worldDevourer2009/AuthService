@@ -1,4 +1,5 @@
 using System.Reflection;
+using AuthService.Application.Common.Behaviors;
 using AuthService.Application.DomainEvents.DomainEventsHandlers.Auth;
 using AuthService.Application.DomainEvents.DomainEventsHandlers.Users;
 using AuthService.Application.Interfaces;
@@ -17,9 +18,23 @@ public static class DependencyInjection
         {
             config.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
         });
-
+        
         services.AddScoped<IDomainDispatcher, DomainDispatcher>();
         
+        BindValidators(services);
+        BindDomainEventHandlers(services);
+
+        return services;
+    }
+
+    private static void BindValidators(IServiceCollection services)
+    {
+        services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+    }
+
+    private static void BindDomainEventHandlers(IServiceCollection services)
+    {
         services.AddScoped<IDomainEventHandler<UserLoggedInDomainEvent>, UserLoggedInDomainEventHandler>();
         services.AddScoped<IDomainEventHandler<UserLoggedOutDomainEvent>, UserLoggedOutDomainEventHandler>();
         services.AddScoped<IDomainEventHandler<UserSignedUpDomainEvent>, UserSignedUpDomainEventHandler>();
@@ -27,7 +42,5 @@ public static class DependencyInjection
         services.AddScoped<IDomainEventHandler<UserCreatedDomainEvent>, UserCreatedDomainEventHandler>();
         services.AddScoped<IDomainEventHandler<UserDeletedDomainEvent>, UserDeletedDomainEventHandler>();
         services.AddScoped<IDomainEventHandler<UserUpdatedDomainEvent>, UserUpdatedDomainEventHandler>();
-        
-        return services;
     }
 }

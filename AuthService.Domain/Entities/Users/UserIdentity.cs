@@ -23,4 +23,14 @@ public class UserIdentity : ValueObject
         yield return FirstName;
         yield return LastName;
     }
+
+    public void SetFirstName(string firstName)
+    {
+        FirstName = firstName;
+    }
+
+    public void SetLastName(string lastName)
+    {
+        LastName = lastName;
+    }
 }

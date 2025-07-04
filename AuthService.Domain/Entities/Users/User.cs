@@ -46,6 +46,16 @@ public class User : Entity
             Email.EmailAddress!));
     }
 
+    public void SetFirstName(string firstName)
+    {
+        UserIdentity.SetFirstName(firstName);
+    }
+
+    public void SetLastName(string lastName)
+    {
+        UserIdentity.SetLastName(lastName);
+    }
+
     public void SetIpAddress(string ipAddress)
     {
         IpAddress = ipAddress;

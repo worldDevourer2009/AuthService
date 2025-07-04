@@ -1,3 +1,5 @@
+using AuthService.Application.Services;
+
 namespace AuthService.Application.Queries.Users;
 
 public record GetUserByEmailQueryRequest(string? Email) : IQuery<GetUserByEmailQueryResponse>;
@@ -5,11 +7,11 @@ public record GetUserByEmailQueryResponse(User? User, bool Success);
 
 public class GetUserByEmailQueryHandler : IQueryHandler<GetUserByEmailQueryRequest, GetUserByEmailQueryResponse>
 {
-    private readonly IUserRepository _userRepository;
+    private readonly IUserService _userService;
 
-    public GetUserByEmailQueryHandler(IUserRepository userRepository)
+    public GetUserByEmailQueryHandler(IUserService userService)
     {
-        _userRepository = userRepository;
+        _userService = userService;
     }
 
     public async Task<GetUserByEmailQueryResponse> Handle(GetUserByEmailQueryRequest request, CancellationToken cancellationToken)
@@ -19,7 +21,7 @@ public class GetUserByEmailQueryHandler : IQueryHandler<GetUserByEmailQueryReque
             return new GetUserByEmailQueryResponse(null!, false);
         }
         
-        var user = await _userRepository.GetUserByEmail(request.Email, cancellationToken);
+        var user = await _userService.GetUserByEmail(request.Email, cancellationToken);
 
         if (user! == null)
         {
