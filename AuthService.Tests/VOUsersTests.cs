@@ -2,9 +2,9 @@
 
 namespace AuthService.Tests;
 
-public class UnitTest1
+public class VOUsersTests
 {
-    public UnitTest1()
+    public VOUsersTests()
     {
     }
     

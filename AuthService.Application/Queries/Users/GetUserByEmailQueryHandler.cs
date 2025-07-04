@@ -2,10 +2,10 @@ using AuthService.Application.Services;
 
 namespace AuthService.Application.Queries.Users;
 
-public record GetUserByEmailQueryRequest(string? Email) : IQuery<GetUserByEmailQueryResponse>;
+public record GetUserByEmailQuery(string? Email) : IQuery<GetUserByEmailQueryResponse>;
 public record GetUserByEmailQueryResponse(User? User, bool Success);
 
-public class GetUserByEmailQueryHandler : IQueryHandler<GetUserByEmailQueryRequest, GetUserByEmailQueryResponse>
+public class GetUserByEmailQueryHandler : IQueryHandler<GetUserByEmailQuery, GetUserByEmailQueryResponse>
 {
     private readonly IUserService _userService;
 
@@ -14,7 +14,7 @@ public class GetUserByEmailQueryHandler : IQueryHandler<GetUserByEmailQueryReque
         _userService = userService;
     }
 
-    public async Task<GetUserByEmailQueryResponse> Handle(GetUserByEmailQueryRequest request, CancellationToken cancellationToken)
+    public async Task<GetUserByEmailQueryResponse> Handle(GetUserByEmailQuery request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.Email))
         {

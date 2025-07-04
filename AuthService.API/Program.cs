@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,7 +26,6 @@ builder.Services.AddNpgsql<AppDbContext>(
 
 builder.Services.AddHealthChecks()
     .AddRedis(builder.Configuration.GetConnectionString("Redis") ?? string.Empty, name: "redis");
-
 
 builder.Services
     .AddOptions<JwtSettings>()
@@ -43,12 +43,14 @@ builder.Services
     .AddOptions<RsaKeySettings>()
     .Bind(builder.Configuration.GetSection("RsaKeySettings"));
 
+builder.Services
+    .AddOptions<InternalAuth>()
+    .Bind(builder.Configuration.GetSection("InternalAuth"));
+
 builder.WebHost.ConfigureKestrel(options =>
 {
     options.ListenAnyIP(80);
-    options.ListenLocalhost(9500, options =>
-    {
-    });
+    options.ListenLocalhost(9500, options => { });
 });
 
 builder.Services.AddInfrastructure();
@@ -74,14 +76,25 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("User", policy => policy.RequireRole("User"));
     options.AddPolicy("Anonymous", policy => policy.RequireRole("Anonymous"));
     options.AddPolicy("Authenticated", policy => policy.RequireAuthenticatedUser());
+    
+    options.AddPolicy("OnlyServices", policy =>
+    {
+        policy.AddAuthenticationSchemes("ServiceScheme");
+        policy.RequireClaim("scope", "internal_api");
+    });
 });
 
 builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+    .AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
     {
         using var scope = builder.Services.BuildServiceProvider().CreateScope();
         var keyGen = scope.ServiceProvider.GetRequiredService<IKeyGenerator>();
+        var jwtSetting = scope.ServiceProvider.GetRequiredService<IOptions<JwtSettings>>().Value;
 
         options.TokenValidationParameters = new TokenValidationParameters
         {
@@ -90,8 +103,8 @@ builder.Services
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidateLifetime = true,
-            ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
-            ValidAudience = builder.Configuration["JwtSettings:Audience"]
+            ValidIssuer = jwtSetting.Issuer,
+            ValidAudience = jwtSetting.Audience
         };
 
         options.TokenValidationParameters.CryptoProviderFactory = new CryptoProviderFactory
@@ -117,10 +130,50 @@ builder.Services
                     context.Fail("Invalid token");
                 }
             },
-            OnAuthenticationFailed = context =>
+            OnAuthenticationFailed = context => { return Task.CompletedTask; }
+        };
+    })
+    .AddJwtBearer("ServiceScheme", options =>
+    {
+        using var scope = builder.Services.BuildServiceProvider().CreateScope();
+        var keyGen = scope.ServiceProvider.GetRequiredService<IKeyGenerator>();
+        var internalAuthSettings = scope.ServiceProvider.GetRequiredService<IOptions<InternalAuth>>().Value;
+        
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new RsaSecurityKey(keyGen.Rsa),
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidIssuer = internalAuthSettings.Issuer,
+            ValidAudience = internalAuthSettings.Audience
+        };
+        
+        options.TokenValidationParameters.CryptoProviderFactory = new CryptoProviderFactory
+        {
+            CacheSignatureProviders = false
+        };
+        
+        options.Events = new JwtBearerEvents()
+        {
+            OnTokenValidated = async context =>
             {
-                return Task.CompletedTask;
-            }
+                var tokenService = context.HttpContext.RequestServices.GetRequiredService<ITokenService>();
+                var jwt = context.SecurityToken as JwtSecurityToken;
+
+                if (jwt == null)
+                {
+                    context.Fail("Invalid token");
+                    return;
+                }
+
+                if (await tokenService.IsAccessTokenRevokedForUser(jwt.RawData))
+                {
+                    context.Fail("Invalid token");
+                }
+            },
+            OnAuthenticationFailed = context => { return Task.CompletedTask; }
         };
     });
 

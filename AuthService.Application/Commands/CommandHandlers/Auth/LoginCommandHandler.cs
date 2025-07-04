@@ -26,6 +26,7 @@ public class LoginCommandHandler : ICommandHandler<LoginCommand, LoginResponse>
             {
                 return new LoginResponse(false, Message: $"{response.Message}");
             }
+            
             return new LoginResponse(true, response.AccessToken, response.RefreshToken, Message: "Login successfully");
         }
         catch (Exception ex)

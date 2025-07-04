@@ -15,13 +15,8 @@
       <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.0.0" />
       <PackageReference Include="MediatR" Version="12.5.0" />
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.6" />
+      <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.6" />
       <PackageReference Include="worldDevourer2009.TaskHandler.Shared" Version="1.0.6" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Common\Validators\" />
-      <Folder Include="Validators\Queries\Auth\" />
-      <Folder Include="Validators\Queries\Users\" />
     </ItemGroup>
 
 </Project>

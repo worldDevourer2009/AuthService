@@ -40,12 +40,12 @@ public class UserLoginService : IUserLoginService
 
             if (user == null)
             {
-                new LoginResponse(false, $"User with email {entry.Email} does not exist");
+                return new LoginResponse(false, $"User with email {entry.Email} does not exist");
             }
 
             if (!await _passwordService.VerifyPasswordForUser(entry.Password, user.Password.PasswordHash!))
             {
-                new LoginResponse(false, "Invalid password");
+               return new LoginResponse(false, "Invalid password");
             }
 
             var (accessToken, refreshToken) =
