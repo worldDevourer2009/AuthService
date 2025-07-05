@@ -3,6 +3,7 @@ using AuthService.Infrastructure.Persistence;
 using AuthService.Infrastructure.Persistence.Repositories;
 using AuthService.Infrastructure.Services.Passwords;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using Testcontainers.PostgreSql;
 
 namespace AuthService.Tests.PasswordsTests;
@@ -40,7 +41,7 @@ public class PasswordTestInternal : IAsyncLifetime
         await _dbContext.Database.EnsureCreatedAsync();
         
         _userRepository = new UserRepository(_dbContext);
-        _passwordService = new PasswordService(_userRepository);
+        _passwordService = new PasswordService(_userRepository, NullLogger<PasswordService>.Instance);
     }
 
     public async Task DisposeAsync()

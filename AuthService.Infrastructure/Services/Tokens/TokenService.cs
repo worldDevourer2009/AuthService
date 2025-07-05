@@ -65,7 +65,7 @@ public class TokenService : ITokenService
             signingCredentials: creds);
 
         var accessToken = _jwtSecurityTokenHandler.WriteToken(jwt);
-
+        _logger.LogInformation("Generated access token for user successfully");
         return accessToken;
     }
 
@@ -83,6 +83,7 @@ public class TokenService : ITokenService
         await _redisService.SetAsync(redisKey, refreshToken, RefreshTokenLifeTime, cancellationToken);
         await _redisService.SetAsync(GetUserIdKey(refreshToken), user.Id.ToString()!, RefreshTokenLifeTime,
             cancellationToken);
+        _logger.LogInformation("Generated refresh token for user successfully");
         return refreshToken;
     }
 
@@ -110,7 +111,7 @@ public class TokenService : ITokenService
 
             var redisKey = $"{DenylistKeyKey}:{jti}";
             await _redisService.SetAsync(redisKey, "revoked", validLifeTime, cancellationToken);
-
+            _logger.LogInformation("Access token revoked successfully");
             return true;
         }
         catch (Exception ex)
@@ -132,7 +133,7 @@ public class TokenService : ITokenService
             var lookupKey = GetUserIdKey(oldToken!);
             await _redisService.RemoveAsync(lookupKey, cancellationToken);
             await _redisService.RemoveAsync(redisKey, cancellationToken);
-
+            _logger.LogInformation("Refresh token revoked successfully");
             return true;
         }
         catch (Exception ex)
@@ -152,6 +153,7 @@ public class TokenService : ITokenService
             var accessRedisKey = GetTokenKey(AccessTokenKey, user.Id.ToString()!);
             await _redisService.RemoveAsync(refreshRedisKey, cancellationToken);
             await _redisService.RemoveAsync(accessRedisKey, cancellationToken);
+            _logger.LogInformation("All tokens revoked successfully");
             return true;
         }
         catch (Exception ex)
@@ -175,7 +177,9 @@ public class TokenService : ITokenService
             }
 
             var redisKey = $"{DenylistKeyKey}:{jti.Id}";
-            return await _redisService.ExistsAsync(redisKey, cancellationToken);
+            var result = await _redisService.ExistsAsync(redisKey, cancellationToken);
+            _logger.LogInformation("Checking revoked access token {Result}", result);
+            return result;
         }
         catch (Exception ex)
         {
@@ -191,7 +195,9 @@ public class TokenService : ITokenService
         try
         {
             var refreshRedisKey = GetTokenKey(RefreshTokenKey, user.Id.ToString()!);
-            return !await _redisService.ExistsAsync(refreshRedisKey, cancellationToken);
+            var result = !await _redisService.ExistsAsync(refreshRedisKey, cancellationToken);
+            _logger.LogInformation("Checking revoked refresh token {Result}", result);
+            return result;
         }
         catch (Exception ex)
         {
@@ -204,6 +210,7 @@ public class TokenService : ITokenService
     {
         if (string.IsNullOrWhiteSpace(refreshToken))
         {
+            _logger.LogError("Refresh token is null");
             throw new ArgumentException("RefreshToken can't be null");
         }
 
@@ -211,11 +218,12 @@ public class TokenService : ITokenService
 
         if (string.IsNullOrWhiteSpace(id) || !Guid.TryParse(id, out var parsedId))
         {
+            _logger.LogError("User id is null");
             throw new ArgumentException("User id is null");
         }
 
         var user = await _context.GetUserById(parsedId, cancellationToken);
-
+        _logger.LogInformation("User {UserId} found", id);
         return user;
     }
 
@@ -252,6 +260,7 @@ public class TokenService : ITokenService
 
         if (user == null)
         {
+            _logger.LogError("User not found in {Method}", nameof(GetUserByEmail));
             throw new Exception("User not found");
         }
 

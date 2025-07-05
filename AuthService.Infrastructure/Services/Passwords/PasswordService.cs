@@ -1,15 +1,18 @@
 using AuthService.Application.Services.Repositories;
 using AuthService.Domain.Services.Passwords;
+using Microsoft.Extensions.Logging;
 
 namespace AuthService.Infrastructure.Services.Passwords;
 
 public class PasswordService : IPasswordService
 {
     private readonly IUserRepository _context;
+    private readonly ILogger<PasswordService> _logger;
 
-    public PasswordService(IUserRepository context)
+    public PasswordService(IUserRepository context, ILogger<PasswordService> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     public Task<bool> VerifyPasswordForUser(string password, string passwordHash)

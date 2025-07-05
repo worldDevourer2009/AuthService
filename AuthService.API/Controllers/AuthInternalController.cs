@@ -1,11 +1,12 @@
 using System.Security.Claims;
-using AuthService.Application.DTOtoTransfer;
 using AuthService.Application.Options;
 using AuthService.Application.Queries.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using TaskHandler.Shared.Auth.DTO.Auth.AuthResults;
+using TaskHandler.Shared.Auth.DTO.Auth.AuthResults.Internal;
 
 namespace AuthService.API.Controllers;
 
@@ -29,12 +30,12 @@ public class AuthInternalController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GenerateServiceToken([FromBody] Classes.GenerateInternalTokenDto dto)
+    public async Task<IActionResult> GenerateServiceToken([FromBody] GenerateInternalTokenDto dto)
     {
         if (dto.ServiceClientId != _internalAuth.ServiceClientId ||
             dto.ClientSecret != _internalAuth.ServiceClientSecret)
         {
-            return Unauthorized(new Classes.AuthInternalDtoResult(false, null, "Invalid creds"));
+            return Unauthorized(new AuthInternalDtoResult(false, null, "Invalid creds"));
         }
         
         var claims = new List<Claim>
@@ -54,10 +55,10 @@ public class AuthInternalController : ControllerBase
         if (!result.Success)
         {
             _logger.LogWarning("Can't generate token {ResultMessage}", result.Message);
-            return BadRequest(new Classes.AuthInternalDtoResult(result.Success, result.Token, result.Message));
+            return BadRequest(new AuthInternalDtoResult(result.Success, result.Token, result.Message));
         }
 
         _logger.LogInformation("Token generated successfully {Message}", result.Message);
-        return Ok(new Classes.AuthInternalDtoResult(result.Success, result.Token, result.Message));
+        return Ok(new AuthInternalDtoResult(result.Success, result.Token, result.Message));
     }
 }

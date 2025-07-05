@@ -1,4 +1,4 @@
-using TaskHandler.Shared.DTO.Auth;
+using TaskHandler.Shared.Auth.DTO.Auth;
 
 namespace AuthService.Application.Common.Validators;
 

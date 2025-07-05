@@ -1,8 +1,8 @@
-using AuthService.Application.DTOtoTransfer;
+using TaskHandler.Shared.Auth.DTO.Auth.AuthResults;
 
 namespace AuthService.Application.Common.Validators;
 
-public class GenerateInternalTokenDtoValidator : AbstractValidator<Classes.GenerateInternalTokenDto>
+public class GenerateInternalTokenDtoValidator : AbstractValidator<GenerateInternalTokenDto>
 {
     public GenerateInternalTokenDtoValidator()
     {

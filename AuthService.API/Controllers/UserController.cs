@@ -1,8 +1,7 @@
 using AuthService.Application.Queries.Users;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using TaskHandler.Shared.DTO.Users.Queries;
+using TaskHandler.Shared.Auth.DTO.Users.Queries;
 
 namespace AuthService.API.Controllers;
 
