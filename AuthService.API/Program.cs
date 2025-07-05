@@ -201,18 +201,27 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 builder.Services.AddLogging();
 
 var app = builder.Build();
+var logger = app.Services.GetRequiredService<ILogger<Program>>();
 
 if (builder.Environment.IsDevelopment())
 {
-    using (var scope = app.Services.CreateScope())
+    try
     {
-        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        using (var scope = app.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            
+            logger.LogInformation("Migrating database...");
+            await context.Database.MigrateAsync();
 
-        await context.Database.MigrateAsync();
-
-        var dataSeeder = scope.ServiceProvider.GetRequiredService<IDataSeeder>();
-
-        await dataSeeder.SeedDataAsync();
+            var dataSeeder = scope.ServiceProvider.GetRequiredService<IDataSeeder>();
+            
+            await dataSeeder.SeedDataAsync();
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "An error occurred while migrating or seeding the database.");
     }
 }
 

@@ -40,8 +40,8 @@ public class AuthInternalController : ControllerBase
         
         var claims = new List<Claim>
         {
-            new Claim("scope", "internal_api"),
-            new Claim("service_name", dto.ServiceClientId)
+            new ("scope", "internal_api"),
+            new ("service_name", dto.ServiceClientId)
         };
 
         if (dto.AdditionalClaims != null)
