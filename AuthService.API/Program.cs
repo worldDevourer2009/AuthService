@@ -21,11 +21,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddMediatR(config => { config.RegisterServicesFromAssembly(typeof(Program).Assembly); });
 
-// Bind options
+// Bind DbContext
 
 builder.Services.AddNpgsql<AppDbContext>(
     builder.Configuration.GetConnectionString("DefaultConnection"),
     b => b.MigrationsAssembly("AuthService.Infrastructure"));
+
+// Bind options
 
 builder.Services.AddHealthChecks()
     .AddRedis(builder.Configuration.GetConnectionString("Redis") ?? string.Empty, name: "redis");

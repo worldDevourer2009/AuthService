@@ -1,5 +1,3 @@
-using System.Net;
-
 namespace AuthService.Domain.Exceptions;
 
 public class ErrorResponse

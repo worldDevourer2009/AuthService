@@ -1,6 +1,6 @@
 namespace AuthService.Domain.Exceptions.VO;
 
-public class InvalidEmailException : Exception
+public class InvalidEmailException : DomainException
 {
     public string Reason { get; }
 

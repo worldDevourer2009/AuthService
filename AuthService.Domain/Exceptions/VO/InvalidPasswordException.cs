@@ -1,6 +1,6 @@
 namespace AuthService.Domain.Exceptions.VO;
 
-public class InvalidPasswordException : Exception
+public class InvalidPasswordException : DomainException
 {
     public string Reason { get; }
 

@@ -1,6 +1,6 @@
 namespace AuthService.Domain.Exceptions.Entities;
 
-public class InvalidUserIdentity : Exception
+public class InvalidUserIdentity : DomainException
 {
     public string Reason { get; }
 
