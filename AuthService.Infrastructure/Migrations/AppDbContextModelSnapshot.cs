@@ -24,9 +24,10 @@ namespace AuthService.Infrastructure.Migrations
 
             modelBuilder.Entity("AuthService.Domain.Entities.Users.User", b =>
                 {
-                    b.Property<Guid>("id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -34,15 +35,19 @@ namespace AuthService.Infrastructure.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("email");
 
                     b.Property<string>("IpAddress")
-                        .HasColumnType("text")
+                        .HasMaxLength(45)
+                        .HasColumnType("character varying(45)")
                         .HasColumnName("ip_address");
 
                     b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
+                        .HasDefaultValue(false)
                         .HasColumnName("is_active");
 
                     b.Property<DateTime?>("LastLogin")
@@ -51,43 +56,42 @@ namespace AuthService.Infrastructure.Migrations
 
                     b.Property<string>("Password")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("password_hash");
 
-                    b.HasKey("id");
+                    b.HasKey("Id");
 
-                    b.ToTable("Users", null, t =>
-                        {
-                            t.Property("id")
-                                .HasColumnName("User_id");
-                        });
+                    b.HasIndex("Email")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Users_Email");
+
+                    b.ToTable("users", (string)null);
                 });
 
             modelBuilder.Entity("AuthService.Domain.Entities.Users.User", b =>
                 {
                     b.OwnsOne("AuthService.Domain.Entities.Users.UserIdentity", "UserIdentity", b1 =>
                         {
-                            b1.Property<Guid>("Userid")
+                            b1.Property<Guid>("UserId")
                                 .HasColumnType("uuid");
 
                             b1.Property<string>("FirstName")
-                                .HasColumnType("text")
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
                                 .HasColumnName("first_name");
 
-                            b1.Property<Guid>("Id")
-                                .HasColumnType("uuid")
-                                .HasColumnName("id");
-
                             b1.Property<string>("LastName")
-                                .HasColumnType("text")
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
                                 .HasColumnName("last_name");
 
-                            b1.HasKey("Userid");
+                            b1.HasKey("UserId");
 
-                            b1.ToTable("Users");
+                            b1.ToTable("users");
 
                             b1.WithOwner()
-                                .HasForeignKey("Userid");
+                                .HasForeignKey("UserId");
                         });
 
                     b.Navigation("UserIdentity")

@@ -1,3 +1,4 @@
+using AuthService.Application.Interfaces;
 using AuthService.Application.Services.Repositories;
 using AuthService.Domain.Responses;
 using AuthService.Domain.Services.Tokens;
@@ -11,12 +12,14 @@ public class UserLogoutService : IUserLogoutService
     private readonly IUserRepository _userRepository;
     private readonly ITokenService _tokenService;
     private readonly ILogger<UserLogoutService> _logger;
+    private readonly IDomainDispatcher _domainDispatcher;
 
-    public UserLogoutService(IUserRepository userRepository, ITokenService tokenService, ILogger<UserLogoutService> logger)
+    public UserLogoutService(IUserRepository userRepository, ITokenService tokenService, ILogger<UserLogoutService> logger, IDomainDispatcher domainDispatcher)
     {
         _userRepository = userRepository;
         _tokenService = tokenService;
         _logger = logger;
+        _domainDispatcher = domainDispatcher;
     }
 
     public async Task<LogoutResponse> LogoutAsync(string? email, CancellationToken cancellationToken = default)
@@ -39,7 +42,10 @@ public class UserLogoutService : IUserLogoutService
         {
             await _tokenService.RevokeAllTokensForUser(user.Email.EmailAddress!, cancellationToken);
             await _userRepository.UpdateUser(user, cancellationToken);
-
+            
+            await _domainDispatcher.DispatchAsync(user.DomainEvents, cancellationToken);
+            user.ClearDomainEvents();
+            
             return new LogoutResponse(true, "User logged out");
         }
         catch (Exception ex)

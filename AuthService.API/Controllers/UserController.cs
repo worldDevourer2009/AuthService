@@ -1,7 +1,7 @@
 using AuthService.Application.Queries.Users;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using TaskHandler.Shared.DTO.Users.Queries;
+using TaskHandler.Shared.Auth.DTO.Users.Queries;
 
 namespace AuthService.API.Controllers;
 
@@ -29,7 +29,7 @@ public class UserController : ControllerBase
             return BadRequest(new { Success = false, Message = "Invalid Id" });
         }
         
-        var request = new GetUserByIdRequest(idGuid);
+        var request = new GetUserByIdQuery(idGuid);
 
         var response = await _mediator.Send(request);
 
@@ -46,7 +46,7 @@ public class UserController : ControllerBase
         
         return Ok(new UserDto()
         {
-            Id = user.UserIdentity.Id,
+            Id = user.Id,
             FirstName = user.UserIdentity.FirstName!,
             LastName = user.UserIdentity.LastName!,
             Email = user.Email.EmailAddress!,
@@ -62,7 +62,7 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetUserByEmail([FromQuery] string email)
     {
-        var request = new GetUserByEmailQueryRequest(email);
+        var request = new GetUserByEmailQuery(email);
         
         var response = await _mediator.Send(request);
 
@@ -80,7 +80,7 @@ public class UserController : ControllerBase
         
         return Ok(new UserDto()
         {
-            Id = user.UserIdentity.Id,
+            Id = user.Id,
             FirstName = user.UserIdentity.FirstName!,
             LastName = user.UserIdentity.LastName!,
             Email = user.Email.EmailAddress!,

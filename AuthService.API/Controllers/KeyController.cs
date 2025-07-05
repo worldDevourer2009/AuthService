@@ -1,4 +1,5 @@
 using AuthService.Domain.Services.Tokens;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,6 +7,7 @@ namespace AuthService.API.Controllers;
 
 [ApiController]
 [Route("/.well-known/public-key.pem")]
+[AllowAnonymous]
 public class KeyController : ControllerBase
 {
     private readonly IKeyGenerator _keyGenerator;

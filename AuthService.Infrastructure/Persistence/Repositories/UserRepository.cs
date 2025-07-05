@@ -1,4 +1,5 @@
 using AuthService.Application.Services.Repositories;
+using AuthService.Domain.VO;
 using AuthService.Infrastructure.Interfaces;
 
 namespace AuthService.Infrastructure.Persistence.Repositories;
@@ -19,7 +20,7 @@ public class UserRepository : IUserRepository
             throw new ArgumentNullException(nameof(id));
         }
         
-        var user = await _context.Users.FirstOrDefaultAsync(x => x.UserIdentity.Id == id, cancellationToken);
+        var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (user == null)
         {
@@ -108,7 +109,7 @@ public class UserRepository : IUserRepository
             throw new ArgumentNullException(nameof(id));
         }
         
-        var user = await _context.Users.FirstOrDefaultAsync(x => x.UserIdentity.Id == id, cancellationToken);
+        var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (user == null)
         {

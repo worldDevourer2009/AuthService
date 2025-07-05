@@ -2,10 +2,10 @@ using AuthService.Domain.Services.Users;
 
 namespace AuthService.Application.Commands.CommandHandlers.Auth;
 
-public record SignUpRequest(string FirstName, string LastName, string Email, string Password) : ICommand<SignUpResponse>;
+public record SignUpCommand(string FirstName, string LastName, string Email, string Password) : ICommand<SignUpResponse>;
 public record SignUpResponse(bool Success, string? AccessToken = null, string? RefreshToken = null, string? Message = null);
 
-public class SignUpCommandHandler : ICommandHandler<SignUpRequest, SignUpResponse>
+public class SignUpCommandHandler : ICommandHandler<SignUpCommand, SignUpResponse>
 {
     private readonly IUserSignUpService _userSignUpService;
 
@@ -14,9 +14,9 @@ public class SignUpCommandHandler : ICommandHandler<SignUpRequest, SignUpRespons
         _userSignUpService = userSignUpService;
     }
 
-    public async Task<SignUpResponse> Handle(SignUpRequest request, CancellationToken cancellationToken)
+    public async Task<SignUpResponse> Handle(SignUpCommand command, CancellationToken cancellationToken)
     {
-        var entry = new SignUpEntry(request.FirstName, request.LastName, request.Email, request.Password);
+        var entry = new SignUpEntry(command.FirstName, command.LastName, command.Email, command.Password);
 
         try
         {
