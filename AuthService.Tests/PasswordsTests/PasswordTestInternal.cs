@@ -52,11 +52,11 @@ public class PasswordTestInternal : IAsyncLifetime
     private async Task Verify_Password_Returns_True()
     {
         //Arrange
-        var newUser = User.Create("TestName", "TestSurname", "test-email@gmail.com", "123456Db");
+        var newUser = User.Create("TestName", "TestSurname", "test-email@gmail.com", "geH1vJcj7N1U5ae3Y!");
         await _userRepository.AddNewUser(newUser);
         
         //Act
-        var result = await _passwordService.VerifyPasswordForUser("123456Db", newUser.Password.PasswordHash!);
+        var result = await _passwordService.VerifyPasswordForUser("geH1vJcj7N1U5ae3Y!", newUser.Password.PasswordHash!);
         
         //Assert
         Assert.True(result);
@@ -66,7 +66,7 @@ public class PasswordTestInternal : IAsyncLifetime
     private async Task Verify_Password_Returns_False()
     {
         //Arrange
-        var newUser = User.Create("TestName", "TestSurname", "test-email@gmail.com", "123456Db");
+        var newUser = User.Create("TestName", "TestSurname", "test-email@gmail.com", "geH1vJcj7N1U5ae3Y!");
         await _userRepository.AddNewUser(newUser);
         
         //Act
@@ -80,7 +80,7 @@ public class PasswordTestInternal : IAsyncLifetime
     private async Task Verify_Password_With_Wrong_Email()
     {
         //Arrange
-        var newUser = User.Create("TestName", "TestSurname", "test-email@gmail.com", "123456Db");
+        var newUser = User.Create("TestName", "TestSurname", "test-email@gmail.com", "geH1vJcj7N1U5ae3Y!");
         await _userRepository.AddNewUser(newUser);
 
         bool result = false;
@@ -88,7 +88,7 @@ public class PasswordTestInternal : IAsyncLifetime
         try
         {
             //Act
-            result = await _passwordService.VerifyPasswordForUser("wrongEmail", "123456Db");
+            result = await _passwordService.VerifyPasswordForUser("wrongEmail", newUser.Password.PasswordHash!);
         }
         catch (Exception e)
         {
