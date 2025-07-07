@@ -87,6 +87,8 @@ jobs:
       JwtSettings__Audience_Prod: ${{ secrets.JWT_AUDIENCE }}
       JwtSettings__Key_Prod: ${{ secrets.JWT_KEY }}
       
+      InternalAuth__ServiceClientSecret: ${{secrets.SERVICE_CLIENT_SECRET}}
+      InternalAuth__ServiceClientId: ${{secrets.SERVICE_CLIENT_ID}}
       RsaKeySettings__KeyPath: './Keys/key.pem'
       RsaKeySettings__GenerateIfMissing: 'true'
       RsaKeySettings__KeySize: '2048'
