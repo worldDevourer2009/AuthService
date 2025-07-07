@@ -90,8 +90,10 @@ public class ControllersQueriesUsers : IClassFixture<WebApplicationFactory<Progr
 
     public async Task DisposeAsync()
     {
-        await _redisContainer.StopAsync();
-        await _postgreSqlContainer.StopAsync();
+        await _context.DisposeAsync();
+        await _webApplicationFactory.DisposeAsync();
+        await _postgreSqlContainer.DisposeAsync();
+        await _redisContainer.DisposeAsync();
     }
 
     [Fact]

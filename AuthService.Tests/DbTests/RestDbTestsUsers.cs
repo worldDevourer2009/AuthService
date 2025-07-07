@@ -83,6 +83,7 @@ public class RestDbTestsUsers : IClassFixture<WebApplicationFactory<Program>>, I
 
     public async Task DisposeAsync()
     {
+        await _webApplicationFactory.DisposeAsync();
         await _context.DisposeAsync();
         await _container.StopAsync();
         await _container.DisposeAsync();

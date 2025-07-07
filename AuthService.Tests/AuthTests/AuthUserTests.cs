@@ -127,8 +127,10 @@ public class AuthUserTests : IClassFixture<WebApplicationFactory<Program>>, IAsy
 
     public async Task DisposeAsync()
     {
-        await _postgreSqlContainer.StopAsync();
-        await _redisContainer.StopAsync();
+        await _context.DisposeAsync();
+        await _webApplicationFactory.DisposeAsync();
+        await _postgreSqlContainer.DisposeAsync();
+        await _redisContainer.DisposeAsync();
     }
 
     #region Sign Up Tests
