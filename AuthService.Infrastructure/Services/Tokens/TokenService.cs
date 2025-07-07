@@ -15,11 +15,11 @@ public class TokenService : ITokenService
 {
     private static readonly TimeSpan AccessTokenLifeTime = TimeSpan.FromMinutes(60);
     private static readonly TimeSpan RefreshTokenLifeTime = TimeSpan.FromDays(7);
-    
-    private const string DenylistKeyKey  = "denylist:jti";
+
+    private const string DenylistKeyKey = "denylist:jti";
     private const string AccessTokenKey = "access_token";
     private const string RefreshTokenKey = "refresh_token";
-    
+
     private readonly IUserRepository _context;
     private readonly IKeyGenerator _keyGenerator;
     private readonly IRedisService _redisService;
@@ -27,7 +27,8 @@ public class TokenService : ITokenService
     private readonly ILogger<TokenService> _logger;
     private readonly JwtSecurityTokenHandler _jwtSecurityTokenHandler;
 
-    public TokenService(IUserRepository context, IKeyGenerator keyGenerator, IRedisService redisService, ILogger<TokenService> logger, IOptions<JwtSettings> jwtSettings)
+    public TokenService(IUserRepository context, IKeyGenerator keyGenerator, IRedisService redisService,
+        ILogger<TokenService> logger, IOptions<JwtSettings> jwtSettings)
     {
         _context = context;
         _keyGenerator = keyGenerator;
@@ -49,10 +50,10 @@ public class TokenService : ITokenService
     {
         var user = await GetUserByEmail(email, cancellationToken);
         var creds = new SigningCredentials(new RsaSecurityKey(_keyGenerator.Rsa), SecurityAlgorithms.RsaSha256);
-        
+
         var claims = new[]
         {
-            new Claim(JwtRegisteredClaimNames.Sub, user.UserIdentity.Id.ToString()!),
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()!),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
@@ -64,23 +65,25 @@ public class TokenService : ITokenService
             signingCredentials: creds);
 
         var accessToken = _jwtSecurityTokenHandler.WriteToken(jwt);
-        
+        _logger.LogInformation("Generated access token for user successfully");
         return accessToken;
     }
 
     public async Task<string> GenerateRefreshTokenForUser(string email, CancellationToken cancellationToken = default)
     {
         var user = await GetUserByEmail(email, cancellationToken);
-        
+
         var randomNumber = new byte[64];
 
         using var rng = RandomNumberGenerator.Create();
         rng.GetBytes(randomNumber);
         var refreshToken = Convert.ToBase64String(randomNumber);
-        var redisKey = GetTokenKey(RefreshTokenKey, user.UserIdentity.Id.ToString()!);
-        
+        var redisKey = GetTokenKey(RefreshTokenKey, user.Id.ToString()!);
+
         await _redisService.SetAsync(redisKey, refreshToken, RefreshTokenLifeTime, cancellationToken);
-        await _redisService.SetAsync(GetUserIdKey(refreshToken), user.UserIdentity.Id.ToString()!, RefreshTokenLifeTime, cancellationToken);
+        await _redisService.SetAsync(GetUserIdKey(refreshToken), user.Id.ToString()!, RefreshTokenLifeTime,
+            cancellationToken);
+        _logger.LogInformation("Generated refresh token for user successfully");
         return refreshToken;
     }
 
@@ -108,7 +111,7 @@ public class TokenService : ITokenService
 
             var redisKey = $"{DenylistKeyKey}:{jti}";
             await _redisService.SetAsync(redisKey, "revoked", validLifeTime, cancellationToken);
-            
+            _logger.LogInformation("Access token revoked successfully");
             return true;
         }
         catch (Exception ex)
@@ -124,13 +127,13 @@ public class TokenService : ITokenService
 
         try
         {
-            var redisKey = GetTokenKey(RefreshTokenKey, user.UserIdentity.Id.ToString()!);
+            var redisKey = GetTokenKey(RefreshTokenKey, user.Id.ToString()!);
             var oldToken = await _redisService.GetAsync(redisKey, cancellationToken);
-            
+
             var lookupKey = GetUserIdKey(oldToken!);
             await _redisService.RemoveAsync(lookupKey, cancellationToken);
             await _redisService.RemoveAsync(redisKey, cancellationToken);
-            
+            _logger.LogInformation("Refresh token revoked successfully");
             return true;
         }
         catch (Exception ex)
@@ -146,10 +149,11 @@ public class TokenService : ITokenService
 
         try
         {
-            var refreshRedisKey = GetTokenKey(RefreshTokenKey, user.UserIdentity.Id.ToString()!);
-            var accessRedisKey = GetTokenKey(AccessTokenKey, user.UserIdentity.Id.ToString()!);
+            var refreshRedisKey = GetTokenKey(RefreshTokenKey, user.Id.ToString()!);
+            var accessRedisKey = GetTokenKey(AccessTokenKey, user.Id.ToString()!);
             await _redisService.RemoveAsync(refreshRedisKey, cancellationToken);
             await _redisService.RemoveAsync(accessRedisKey, cancellationToken);
+            _logger.LogInformation("All tokens revoked successfully");
             return true;
         }
         catch (Exception ex)
@@ -159,7 +163,8 @@ public class TokenService : ITokenService
         }
     }
 
-    public async Task<bool> IsAccessTokenRevokedForUser(string accessToken, CancellationToken cancellationToken = default)
+    public async Task<bool> IsAccessTokenRevokedForUser(string accessToken,
+        CancellationToken cancellationToken = default)
     {
         try
         {
@@ -170,9 +175,11 @@ public class TokenService : ITokenService
                 _logger.LogWarning("Invalid jwt token");
                 return false;
             }
-            
+
             var redisKey = $"{DenylistKeyKey}:{jti.Id}";
-            return await _redisService.ExistsAsync(redisKey, cancellationToken);
+            var result = await _redisService.ExistsAsync(redisKey, cancellationToken);
+            _logger.LogInformation("Checking revoked access token {Result}", result);
+            return result;
         }
         catch (Exception ex)
         {
@@ -180,15 +187,17 @@ public class TokenService : ITokenService
             return false;
         }
     }
-    
+
     public async Task<bool> IsRefreshTokenRevokedForUser(string email, CancellationToken cancellationToken = default)
     {
         var user = await GetUserByEmail(email, cancellationToken);
 
         try
         {
-            var refreshRedisKey = GetTokenKey(RefreshTokenKey, user.UserIdentity.Id.ToString()!);
-            return !await _redisService.ExistsAsync(refreshRedisKey, cancellationToken);
+            var refreshRedisKey = GetTokenKey(RefreshTokenKey, user.Id.ToString()!);
+            var result = !await _redisService.ExistsAsync(refreshRedisKey, cancellationToken);
+            _logger.LogInformation("Checking revoked refresh token {Result}", result);
+            return result;
         }
         catch (Exception ex)
         {
@@ -201,6 +210,7 @@ public class TokenService : ITokenService
     {
         if (string.IsNullOrWhiteSpace(refreshToken))
         {
+            _logger.LogError("Refresh token is null");
             throw new ArgumentException("RefreshToken can't be null");
         }
 
@@ -208,20 +218,49 @@ public class TokenService : ITokenService
 
         if (string.IsNullOrWhiteSpace(id) || !Guid.TryParse(id, out var parsedId))
         {
+            _logger.LogError("User id is null");
             throw new ArgumentException("User id is null");
         }
 
         var user = await _context.GetUserById(parsedId, cancellationToken);
-
+        _logger.LogInformation("User {UserId} found", id);
         return user;
     }
-    
+
+    public Task<string?> GenerateToken(string issuer, string audience, IEnumerable<Claim> claims, DateTime expiresIn,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var now = DateTime.UtcNow;
+            var creds = new SigningCredentials(new RsaSecurityKey(_keyGenerator.Rsa), SecurityAlgorithms.RsaSha256);
+
+            var jwt = new JwtSecurityToken(
+                issuer: issuer,
+                audience: audience,
+                claims: claims,
+                notBefore: now,
+                expires: expiresIn,
+                signingCredentials: creds);
+
+            var token = _jwtSecurityTokenHandler.WriteToken(jwt);
+            _logger.LogInformation("Generated access token for service successfully");
+            return Task.FromResult<string?>(token);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error while creating token for service");
+            return Task.FromResult<string?>(null);
+        }
+    }
+
     private async Task<User> GetUserByEmail(string email, CancellationToken cancellationToken = default)
     {
         var user = await _context.GetUserByEmail(email, cancellationToken);
 
         if (user == null)
         {
+            _logger.LogError("User not found in {Method}", nameof(GetUserByEmail));
             throw new Exception("User not found");
         }
 

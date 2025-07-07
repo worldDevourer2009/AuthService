@@ -1,8 +1,8 @@
 using AuthService.Application.Commands.CommandHandlers.Auth;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using TaskHandler.Shared.DTO.Auth;
-using TaskHandler.Shared.DTO.Auth.AuthResults;
+using TaskHandler.Shared.Auth.DTO.Auth;
+using TaskHandler.Shared.Auth.DTO.Auth.AuthResults;
 
 namespace AuthService.API.Controllers;
 
@@ -25,7 +25,7 @@ public class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> SignUp([FromBody] SignUpDto entry)
     {
-        var request = new SignUpRequest(entry.FirstName, entry.LastName, entry.Email, entry.Password);
+        var request = new SignUpCommand(entry.FirstName, entry.LastName, entry.Email, entry.Password);
 
         var response = await _mediator.Send(request);
 
@@ -53,7 +53,7 @@ public class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login([FromBody] LoginDto entry)
     {
-        var request = new LoginRequest(entry.Email, entry.Password);
+        var request = new LoginCommand(entry.Email, entry.Password);
 
         var response = await _mediator.Send(request);
 
@@ -81,7 +81,7 @@ public class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Logout([FromBody] LogoutDto entry)
     {
-        var request = new LogoutRequest(entry.Email);
+        var request = new LogoutCommand(entry.Email);
 
         var response = await _mediator.Send(request);
 
@@ -101,7 +101,7 @@ public class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Refresh()
     {
-        var request = new RefreshTokensRequest(Request.Cookies["refreshToken"]);
+        var request = new RefreshTokensCommand(Request.Cookies["refreshToken"]);
         var response = await _mediator.Send(request);
 
         if (!response.Success)

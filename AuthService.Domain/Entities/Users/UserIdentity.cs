@@ -1,8 +1,9 @@
+using AuthService.Domain.Exceptions.Entities;
+
 namespace AuthService.Domain.Entities.Users;
 
 public class UserIdentity : ValueObject
 {
-    public Guid? Id { get; private set; }
     public string? FirstName { get; private set; }
     public string? LastName { get; private set; }
     
@@ -12,9 +13,18 @@ public class UserIdentity : ValueObject
 
     public static UserIdentity Create(string firstName, string lastName)
     {
+        if (firstName.Length < 2)
+        {
+            throw new InvalidUserIdentity("First name should be longer");
+        }
+        
+        if (lastName.Length < 2)
+        {
+            throw new InvalidUserIdentity("Last name should be longer");
+        }
+        
         return new UserIdentity
         {
-            Id = Guid.NewGuid(),
             FirstName = firstName,
             LastName = lastName,
         };
@@ -24,5 +34,15 @@ public class UserIdentity : ValueObject
     {
         yield return FirstName;
         yield return LastName;
+    }
+
+    public void SetFirstName(string firstName)
+    {
+        FirstName = firstName;
+    }
+
+    public void SetLastName(string lastName)
+    {
+        LastName = lastName;
     }
 }

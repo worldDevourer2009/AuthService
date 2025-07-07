@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using AuthService.Domain.Entities.Users;
 
 namespace AuthService.Domain.Services.Tokens;
@@ -13,4 +14,5 @@ public interface ITokenService
     Task<bool> IsAccessTokenRevokedForUser(string accessToken, CancellationToken cancellationToken = default);
     Task<bool> IsRefreshTokenRevokedForUser(string email, CancellationToken cancellationToken = default);
     Task<User?> GetUserByRefreshToken(string? refreshToken, CancellationToken cancellationToken = default);
+    Task<string?> GenerateToken(string issuer, string audience, IEnumerable<Claim> claims, DateTime expiresIn, CancellationToken cancellationToken = default);
 }

@@ -2,10 +2,10 @@ using AuthService.Domain.Services.Users;
 
 namespace AuthService.Application.Commands.CommandHandlers.Auth;
 
-public record LoginRequest(string Email, string Password) : ICommand<LoginResponse>;
+public record LoginCommand(string Email, string Password) : ICommand<LoginResponse>;
 public record LoginResponse(bool Success, string? AccessToken = null, string? RefreshToken = null, string? Message = null);
 
-public class LoginCommandHandler : ICommandHandler<LoginRequest, LoginResponse>
+public class LoginCommandHandler : ICommandHandler<LoginCommand, LoginResponse>
 {
     private readonly IUserLoginService _userLoginService;
 
@@ -14,9 +14,9 @@ public class LoginCommandHandler : ICommandHandler<LoginRequest, LoginResponse>
         _userLoginService = userLoginService;
     }
 
-    public async Task<LoginResponse> Handle(LoginRequest request, CancellationToken cancellationToken)
+    public async Task<LoginResponse> Handle(LoginCommand command, CancellationToken cancellationToken)
     {
-        var loginEntry = new LoginEntry(request.Email, request.Password);
+        var loginEntry = new LoginEntry(command.Email, command.Password);
 
         try
         {
@@ -26,6 +26,7 @@ public class LoginCommandHandler : ICommandHandler<LoginRequest, LoginResponse>
             {
                 return new LoginResponse(false, Message: $"{response.Message}");
             }
+            
             return new LoginResponse(true, response.AccessToken, response.RefreshToken, Message: "Login successfully");
         }
         catch (Exception ex)

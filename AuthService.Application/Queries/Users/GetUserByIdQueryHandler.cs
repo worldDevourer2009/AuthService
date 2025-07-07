@@ -1,20 +1,22 @@
+using AuthService.Application.Services;
+
 namespace AuthService.Application.Queries.Users;
 
-public record GetUserByIdRequest(Guid Id) : IQuery<GetUserByIdResponse>;
+public record GetUserByIdQuery(Guid Id) : IQuery<GetUserByIdResponse>;
 public record GetUserByIdResponse(User? User, bool Success);
 
-public class GetUserByIdQueryHandler : IQueryHandler<GetUserByIdRequest, GetUserByIdResponse>
+public class GetUserByIdQueryHandler : IQueryHandler<GetUserByIdQuery, GetUserByIdResponse>
 {
-    private readonly IUserRepository _userRepository;
+    private readonly IUserService _userService;
 
-    public GetUserByIdQueryHandler(IUserRepository userRepository)
+    public GetUserByIdQueryHandler(IUserService userService)
     {
-        _userRepository = userRepository;
+        _userService = userService;
     }
 
-    public async Task<GetUserByIdResponse> Handle(GetUserByIdRequest request, CancellationToken cancellationToken)
+    public async Task<GetUserByIdResponse> Handle(GetUserByIdQuery query, CancellationToken cancellationToken)
     {
-        var user = await _userRepository.GetUserById(request.Id, cancellationToken);
+        var user = await _userService.GetUserById(query.Id, cancellationToken);
         
         if (user is null)
         {

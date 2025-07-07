@@ -7,7 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
-using TaskHandler.Shared.DTO.Auth;
+using TaskHandler.Shared.Auth.DTO.Auth;
 using Testcontainers.PostgreSql;
 using Testcontainers.Redis;
 using Xunit.Abstractions;
@@ -90,19 +90,24 @@ public class ControllersQueriesUsers : IClassFixture<WebApplicationFactory<Progr
 
     public async Task DisposeAsync()
     {
-        await _redisContainer.StopAsync();
-        await _postgreSqlContainer.StopAsync();
+        await _context.DisposeAsync();
+        await _webApplicationFactory.DisposeAsync();
+        await _postgreSqlContainer.DisposeAsync();
+        await _redisContainer.DisposeAsync();
     }
 
     [Fact]
     private async Task Auth_User_Sign_Up_Returns_200()
     {
         //Arrange
-        var client = _webApplicationFactory.CreateClient();
-        var request = new SignUpDto("TestName", "TestSurname", "TestEmail@gmail.com", "12345Db");
+        var client = _webApplicationFactory.CreateClient(new WebApplicationFactoryClientOptions
+            { HandleCookies = false });
+        var request = new SignUpDto("TestName", "TestSurname", "TestEmail@gmail.com", "geH1vJcj7N1U5ae3Y!");
         
         //Act
         var response = await client.PostAsJsonAsync("api/auth/sign-up", request);
+        var signUpContent = await response.Content.ReadAsStringAsync();
+        _output.WriteLine(signUpContent);
         
         //Assert
         Assert.Equal(200, (int)response.StatusCode);
@@ -112,12 +117,15 @@ public class ControllersQueriesUsers : IClassFixture<WebApplicationFactory<Progr
     private async Task Auth_User_Login_Returns_200()
     {
         //Arrange
-        var client = _webApplicationFactory.CreateClient();
-        var signUpRequest = new SignUpDto("Paul", "Walker", "hello@world123.com", "password123");
-        var request = new LoginDto("hello@world123.com", "password123");
+        var client = _webApplicationFactory.CreateClient(new WebApplicationFactoryClientOptions
+            { HandleCookies = false });
+        var signUpRequest = new SignUpDto("Paul", "Walker", "hello@world123.com", "geH1vJcj7N1U5ae3Y!");
         
         //Setup
         var signUpResponse = await client.PostAsJsonAsync("api/auth/sign-up", signUpRequest);
+        
+        var signUpContent = await signUpResponse.Content.ReadAsStringAsync();
+        _output.WriteLine(signUpContent);
         
         //Assert
         Assert.Equal(200, (int)signUpResponse.StatusCode);

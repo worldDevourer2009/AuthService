@@ -11,8 +11,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
-using TaskHandler.Shared.DTO.Auth;
-using TaskHandler.Shared.DTO.Auth.AuthResults;
+using TaskHandler.Shared.Auth.DTO.Auth;
+using TaskHandler.Shared.Auth.DTO.Auth.AuthResults;
 using Testcontainers.PostgreSql;
 using Testcontainers.Redis;
 using Xunit.Abstractions;
@@ -127,8 +127,10 @@ public class AuthUserTests : IClassFixture<WebApplicationFactory<Program>>, IAsy
 
     public async Task DisposeAsync()
     {
-        await _postgreSqlContainer.StopAsync();
-        await _redisContainer.StopAsync();
+        await _context.DisposeAsync();
+        await _webApplicationFactory.DisposeAsync();
+        await _postgreSqlContainer.DisposeAsync();
+        await _redisContainer.DisposeAsync();
     }
 
     #region Sign Up Tests
@@ -140,7 +142,7 @@ public class AuthUserTests : IClassFixture<WebApplicationFactory<Program>>, IAsy
         {
             HandleCookies = false
         });
-        var request = new SignUpDto("John", "Doe", "john.doe@example.com", "Password123!");
+        var request = new SignUpDto("John", "Doe", "john.doe@example.com", "geH1vJcj7N1U5ae3Y!");
 
         // Act
         var response = await client.PostAsJsonAsync("api/auth/sign-up", request);
@@ -187,7 +189,7 @@ public class AuthUserTests : IClassFixture<WebApplicationFactory<Program>>, IAsy
     {
         // Arrange
         var client = _webApplicationFactory.CreateClient();
-        var request = new SignUpDto("John", "Doe", "invalid-email", "Password123!");
+        var request = new SignUpDto("John", "Doe", "invalid-email", "geH1vJcj7N1U5ae3Y!");
 
         // Act
         var response = await client.PostAsJsonAsync("api/auth/sign-up", request);
@@ -201,7 +203,7 @@ public class AuthUserTests : IClassFixture<WebApplicationFactory<Program>>, IAsy
     {
         // Arrange
         var client = _webApplicationFactory.CreateClient();
-        var request = new SignUpDto("John", "Doe", "duplicate@example.com", "Password123!");
+        var request = new SignUpDto("John", "Doe", "duplicate@example.com", "geH1vJcj7N1U5ae3Y!");
 
         // Act
         var firstResponse = await client.PostAsJsonAsync("api/auth/sign-up", request);
@@ -222,7 +224,7 @@ public class AuthUserTests : IClassFixture<WebApplicationFactory<Program>>, IAsy
         // Arrange
         var client = _webApplicationFactory.CreateClient();
         var email = "login.test@example.com";
-        var password = "Password123!";
+        var password = "geH1vJcj7N1U5ae3Y!";
 
         var signUpRequest = new SignUpDto("Test", "User", email, password);
         await client.PostAsJsonAsync("api/auth/sign-up", signUpRequest);
@@ -252,7 +254,7 @@ public class AuthUserTests : IClassFixture<WebApplicationFactory<Program>>, IAsy
         // Arrange
         var client = _webApplicationFactory.CreateClient();
         var email = "invalid.password@example.com";
-        var correctPassword = "Password123!";
+        var correctPassword = "geH1vJcj7N1U5ae3Y!";
         var wrongPassword = "WrongPassword123!";
 
         var signUpRequest = new SignUpDto("Test", "User", email, correctPassword);
@@ -302,7 +304,7 @@ public class AuthUserTests : IClassFixture<WebApplicationFactory<Program>>, IAsy
         });
 
         var email = "refresh.test@example.com";
-        var password = "Password123!";
+        var password = "geH1vJcj7N1U5ae3Y!";
 
         var signUpRequest = new SignUpDto("Test", "User", email, password);
         var signUpResponse = await client.PostAsJsonAsync("api/auth/sign-up", signUpRequest);
@@ -381,7 +383,7 @@ public class AuthUserTests : IClassFixture<WebApplicationFactory<Program>>, IAsy
         // Arrange
         var client = _webApplicationFactory.CreateClient();
         var email = "logout.test@example.com";
-        var password = "Password123!";
+        var password = "geH1vJcj7N1U5ae3Y!";
 
         var signUpRequest = new SignUpDto("Test", "User", email, password);
         await client.PostAsJsonAsync("api/auth/sign-up", signUpRequest);
@@ -432,7 +434,7 @@ public class AuthUserTests : IClassFixture<WebApplicationFactory<Program>>, IAsy
         var client = _webApplicationFactory.CreateClient(new WebApplicationFactoryClientOptions
             { HandleCookies = false });
         var email = "test.user@example.com";
-        var password = "Password123!";
+        var password = "geH1vJcj7N1U5ae3Y!";
 
         var signUp = await client.PostAsJsonAsync("api/auth/sign-up", new SignUpDto("Test", "User", email, password));
 
@@ -510,7 +512,7 @@ public class AuthUserTests : IClassFixture<WebApplicationFactory<Program>>, IAsy
         // Arrange
         var client = _webApplicationFactory.CreateClient();
         var email = "security.test@example.com";
-        var password = "Password123!";
+        var password = "geH1vJcj7N1U5ae3Y!";
 
         // Sign up and get refresh token
         var signUpRequest = new SignUpDto("Security", "Test", email, password);

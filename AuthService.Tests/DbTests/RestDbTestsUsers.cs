@@ -83,6 +83,7 @@ public class RestDbTestsUsers : IClassFixture<WebApplicationFactory<Program>>, I
 
     public async Task DisposeAsync()
     {
+        await _webApplicationFactory.DisposeAsync();
         await _context.DisposeAsync();
         await _container.StopAsync();
         await _container.DisposeAsync();
@@ -92,7 +93,7 @@ public class RestDbTestsUsers : IClassFixture<WebApplicationFactory<Program>>, I
     public async Task Add_New_User_Returns_True()
     {
         // Arrange
-        var user = User.Create("Anatole", "France", "hello@gmail.com", "123456789");
+        var user = User.Create("Anatole", "France", "hello@gmail.com", "geH1vJcj7N1U5ae3Y!");
         
         // Act
         await _repository.AddNewUser(user);
@@ -129,7 +130,7 @@ public class RestDbTestsUsers : IClassFixture<WebApplicationFactory<Program>>, I
     public async Task Delete_User_Removes_From_Database()
     {
         // Arrange
-        var user = User.Create("John", "Doe", "john.doe@example.com", "password123");
+        var user = User.Create("John", "Doe", "john.doe@example.com", "geH1vJcj7N1U5ae3Y!");
         await _repository.AddNewUser(user);
         
         // Act
@@ -153,8 +154,8 @@ public class RestDbTestsUsers : IClassFixture<WebApplicationFactory<Program>>, I
     public async Task Add_Multiple_Users_All_Persisted()
     {
         // Arrange
-        var user1 = User.Create("Alice", "Smith", "alice@example.com", "password1");
-        var user2 = User.Create("Bob", "Johnson", "bob@example.com", "password2");
+        var user1 = User.Create("Alice", "Smith", "alice@example.com", "geH1vJcj7N1U5ae3Y!");
+        var user2 = User.Create("Bob", "Johnson", "bob@example.com", "geH1vJcj7N1U5ae3Y!11");
         
         // Act
         await _repository.AddNewUser(user1);

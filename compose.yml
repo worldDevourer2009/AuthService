@@ -14,7 +14,8 @@ services:
       - ASPNETCORE_URLS=http://+80;https://+443
       - ConnectionStrings__DefaultConnection=Host=authService-db;Port=5432;Database=authService;Username=authService_user;Password=authService_password;Include Error Detail=true
       - ConnectionStrings__Redis=authService-redis:6379
-      - Kafka__BootstrapServers=kafka:9092
+      - Kafka__BootstrapServers=kafka:29092
+      - InternalAuth__Issuer=http://auth.internal
     entrypoint:
       - "dotnet"
       - "AuthService.API.dll"
@@ -26,6 +27,8 @@ services:
       - microservices
     depends_on:
       authService-db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
   authService-db:
     image: postgres:15

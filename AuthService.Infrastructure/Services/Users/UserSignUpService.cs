@@ -1,3 +1,4 @@
+using AuthService.Application.Interfaces;
 using AuthService.Application.Services.Repositories;
 using AuthService.Domain.Entries;
 using AuthService.Domain.Responses;
@@ -12,12 +13,14 @@ public class UserSignUpService : IUserSignUpService
     private readonly IUserRepository _userRepository;
     private readonly ITokenService _tokenService;
     private readonly ILogger<UserSignUpService> _logger;
+    private readonly IDomainDispatcher _domainDispatcher;
 
-    public UserSignUpService(IUserRepository userRepository, ITokenService tokenService, ILogger<UserSignUpService> logger)
+    public UserSignUpService(IUserRepository userRepository, ITokenService tokenService, ILogger<UserSignUpService> logger, IDomainDispatcher domainDispatcher)
     {
         _userRepository = userRepository;
         _tokenService = tokenService;
         _logger = logger;
+        _domainDispatcher = domainDispatcher;
     }
 
     public async Task<SignUpResponse> SignUpAsync(SignUpEntry entry, CancellationToken cancellationToken = default)
@@ -41,7 +44,10 @@ public class UserSignUpService : IUserSignUpService
 
             var (accessToken, refreshToken) =
                 await _tokenService.GenerateTokenPairForUser(user.Email.EmailAddress!, cancellationToken);
-
+            
+            await _domainDispatcher.DispatchAsync(user.DomainEvents, cancellationToken);
+            user.ClearDomainEvents();
+            
             return new SignUpResponse(true, accessToken, refreshToken);
         }
         catch (Exception ex)
