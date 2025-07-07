@@ -13,6 +13,7 @@ env:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 7
 
     services:
       postgres:
@@ -131,6 +132,7 @@ jobs:
         run: |
           export ASPNETCORE_ENVIRONMENT=Testing
           dotnet test --no-build --configuration Release \
+            --blame
             --logger "trx;LogFileName=test_results.trx" \
             --results-directory TestResults \
             --verbosity normal
