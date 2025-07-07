@@ -27,9 +27,11 @@ public class InternalAuthQueryHandler : IQueryHandler<InternalAuthQuery, Interna
     {
         try
         {
+            _logger.LogInformation("Issuer before generating token: >{Issuer}<", _internalAuth.Issuer);
+            
             var result = await _tokenService.GenerateToken(
-                _internalAuth.Issuer,
-                _internalAuth.Audience,
+                _internalAuth.Issuer!,
+                _internalAuth.Audience!,
                 request.Claims,
                 DateTime.UtcNow.Add(TimeSpan.FromMinutes(_internalAuth.AccessTokenExpirationMinutes)),
                 cancellationToken);

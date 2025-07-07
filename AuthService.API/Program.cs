@@ -1,4 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
@@ -9,7 +11,9 @@ using AuthService.Application.Services;
 using AuthService.Domain.Services.Tokens;
 using AuthService.Infrastructure;
 using AuthService.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -80,6 +84,7 @@ builder.Services.AddRateLimiter(options =>
             }));
 });
 
+
 // Auth and Authorization
 
 builder.Services.AddAuthorization(options =>
@@ -88,13 +93,14 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("User", policy => policy.RequireRole("User"));
     options.AddPolicy("Anonymous", policy => policy.RequireRole("Anonymous"));
     options.AddPolicy("Authenticated", policy => policy.RequireAuthenticatedUser());
-    
+
     options.AddPolicy("OnlyServices", policy =>
     {
         policy.AddAuthenticationSchemes("ServiceScheme");
         policy.RequireClaim("scope", "internal_api");
     });
 });
+
 
 builder.Services
     .AddAuthentication(options =>
@@ -150,7 +156,7 @@ builder.Services
         using var scope = builder.Services.BuildServiceProvider().CreateScope();
         var keyGen = scope.ServiceProvider.GetRequiredService<IKeyGenerator>();
         var internalAuthSettings = scope.ServiceProvider.GetRequiredService<IOptions<InternalAuth>>().Value;
-        
+
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
@@ -161,12 +167,12 @@ builder.Services
             ValidIssuer = internalAuthSettings.Issuer,
             ValidAudience = internalAuthSettings.Audience
         };
-        
+
         options.TokenValidationParameters.CryptoProviderFactory = new CryptoProviderFactory
         {
             CacheSignatureProviders = false
         };
-        
+
         options.Events = new JwtBearerEvents()
         {
             OnTokenValidated = async context =>
@@ -212,12 +218,12 @@ if (builder.Environment.IsDevelopment())
         using (var scope = app.Services.CreateScope())
         {
             var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            
+
             logger.LogInformation("Migrating database...");
             await context.Database.MigrateAsync();
 
             var dataSeeder = scope.ServiceProvider.GetRequiredService<IDataSeeder>();
-            
+
             await dataSeeder.SeedDataAsync();
         }
     }

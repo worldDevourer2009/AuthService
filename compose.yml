@@ -15,7 +15,7 @@ services:
       - ConnectionStrings__DefaultConnection=Host=authService-db;Port=5432;Database=authService;Username=authService_user;Password=authService_password;Include Error Detail=true
       - ConnectionStrings__Redis=authService-redis:6379
       - Kafka__BootstrapServers=kafka:29092
-      - InternalAuth__Issuer="http://auth.internal
+      - InternalAuth__Issuer=http://auth.internal
     entrypoint:
       - "dotnet"
       - "AuthService.API.dll"

@@ -49,16 +49,24 @@ public class AuthInternalController : ControllerBase
             claims.AddRange(dto.AdditionalClaims);
         }
 
-        var query = new InternalAuthQuery(claims);
-        var result = await _mediator.Send(query);
-
-        if (!result.Success)
+        try
         {
-            _logger.LogWarning("Can't generate token {ResultMessage}", result.Message);
-            return BadRequest(new AuthInternalDtoResult(result.Success, result.Token, result.Message));
-        }
+            var query = new InternalAuthQuery(claims);
+            var result = await _mediator.Send(query);
 
-        _logger.LogInformation("Token generated successfully {Message}", result.Message);
-        return Ok(new AuthInternalDtoResult(result.Success, result.Token, result.Message));
+            if (!result.Success)
+            {
+                _logger.LogWarning("Can't generate token {ResultMessage}", result.Message);
+                return BadRequest(new AuthInternalDtoResult(result.Success, result.Token, result.Message));
+            }
+
+            _logger.LogInformation("Token generated successfully {Message}", result.Message);
+            return Ok(new AuthInternalDtoResult(result.Success, result.Token, result.Message));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error while generating token");
+            return BadRequest(new AuthInternalDtoResult(false, null, "Error while generating token"));
+        }
     }
 }
