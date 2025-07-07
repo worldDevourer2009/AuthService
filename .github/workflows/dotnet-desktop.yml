@@ -48,7 +48,7 @@ jobs:
         ports:
           - 2181:2181
         options: >-
-          --health-cmd="echo ruok | nc localhost 2181 | grep imok"
+          --health-cmd="echo stat | nc localhost 2181 | grep Mode:"
           --health-interval=15s
           --health-timeout=5s
           --health-retries=5
