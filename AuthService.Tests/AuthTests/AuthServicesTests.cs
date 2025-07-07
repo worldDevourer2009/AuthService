@@ -149,12 +149,14 @@ public class AuthServicesTests : IClassFixture<WebApplicationFactory<Program>>, 
         _output.WriteLine("Public key length: {0}", pem.Length);
     }
 
-    [Theory]
-    [InlineData("taskHandler-application", "~Dz8d%aq3FU3#7?4?9Hrs?kp/7eS9Fc6")]
-    public async Task GenerateServiceToken_ValidCredentials_ShouldReturnToken(string clientId, string secret)
+    [Fact]
+    private async Task GenerateServiceToken_ValidCredentials_ShouldReturnToken()
     {
         // Arrange
         var client = _factory.CreateClient();
+        var configuration = _factory.Services.GetRequiredService<IConfiguration>();
+        var clientId = configuration["InternalAuth:ServiceClientId"];
+        var secret = configuration["InternalAuth:ServiceClientSecret"];
         var dto = new { ServiceClientId = clientId, ClientSecret = secret };
         
         // Act
