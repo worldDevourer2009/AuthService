@@ -120,8 +120,8 @@ jobs:
         with:
           dotnet-version: ${{ matrix.dotnet-version }}
 
-      - name: Install PostgreSQL and Redis clients
-        run: sudo apt-get update && sudo apt-get install -y postgresql-client redis-tools
+#      - name: Install PostgreSQL and Redis clients
+#        run: sudo apt-get update && sudo apt-get install -y postgresql-client redis-tools
 
       - name: Configure GitHub NuGet source with authentication
         run: |
@@ -160,12 +160,16 @@ jobs:
       - name: Run tests with environment variables
         run: |
           export ASPNETCORE_ENVIRONMENT=Testing
+          export TESTCONTAINERS_RYUK_DISABLED=true
+          export DOCKER_HOST=unix:///var/run/docker.sock
           dotnet test --no-build --configuration Release \
-            --blame
+            --blame-hang-timeout 15m \
             --logger "trx;LogFileName=test_results.trx" \
+            --logger "console;verbosity=detailed" \
             --results-directory TestResults \
-            --verbosity normal
-
+            --verbosity normal \
+            --collect:"XPlat Code Coverage"
+      
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
