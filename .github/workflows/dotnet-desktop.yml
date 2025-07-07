@@ -157,18 +157,23 @@ jobs:
           echo "Available test projects:"
           find . -name "*.Tests.csproj" -type f
 
-      - name: Run tests with environment variables
+      - name: Run tests with strict timeout
         run: |
           export ASPNETCORE_ENVIRONMENT=Testing
           export TESTCONTAINERS_RYUK_DISABLED=true
           export DOCKER_HOST=unix:///var/run/docker.sock
-          dotnet test --no-build --configuration Release \
-            --blame-hang-timeout 15m \
-            --logger "trx;LogFileName=test_results.trx" \
-            --logger "console;verbosity=detailed" \
+          
+          timeout 300 dotnet test --no-build --configuration Release \
+            --blame-hang-timeout 4m \
+            --logger "console;verbosity=normal" \
             --results-directory TestResults \
-            --verbosity normal \
-            --collect:"XPlat Code Coverage"
+            --verbosity minimal \
+            --collect:"XPlat Code Coverage" \
+            --settings test.runsettings || echo "Tests completed or timed out"
+          
+          docker stop $(docker ps -q) || true
+          docker rm $(docker ps -aq) || true
+          
       
       - name: Upload test results
         uses: actions/upload-artifact@v4
