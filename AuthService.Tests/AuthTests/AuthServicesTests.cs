@@ -54,16 +54,19 @@ public class AuthServicesTests : IClassFixture<WebApplicationFactory<Program>>, 
                 var settings = new Dictionary<string, string>
                 {
                     ["ConnectionStrings:DefaultConnection"] = _postgreSqlContainer.GetConnectionString(),
-                    ["ConnectionStrings:Redis"] =
-                        $"{_redisContainer.Hostname}:{_redisContainer.GetMappedPublicPort(6379)}",
+                    ["ConnectionStrings:Redis"] = $"{_redisContainer.Hostname}:{_redisContainer.GetMappedPublicPort(6379)}",
                     ["JwtSettings:Issuer"] = "test-issuer",
                     ["JwtSettings:Audience"] = "test-audience",
                     ["JwtSettings:Key"] = "Nj8s@Z%~4vH8*91@",
                     ["RsaKeySettings:KeyPath"] = "Keys/key.pem",
                     ["RsaKeySettings:GenerateIfMissing"] = "true",
-                    ["RsaKeySettings:KeySize"] = "2048"
+                    ["RsaKeySettings:KeySize"] = "2048",
+                    ["InternalAuth:ServiceClientId"] = "test-service-client",
+                    ["InternalAuth:ServiceClientSecret"] = "test-service-secret",
+                    ["InternalAuth:Issuer"] = "http://auth.internal"
                 };
                 conf.AddInMemoryCollection(settings);
+
             });
 
             builder.ConfigureServices(services =>
