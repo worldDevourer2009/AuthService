@@ -4,8 +4,8 @@ services:
     build:
       context: .
       dockerfile: AuthService.API/Dockerfile
-      args:
-        NUGET_TOKEN: ${NUGET_TOKEN}
+      secrets:
+        - nuget_token
     ports:
       - "9000:80"
       - "9001:443"
@@ -76,3 +76,7 @@ networks:
     external: true
   microservices:
     external: true  
+    
+secrets:
+  nuget_token:
+    file: ./secrets/nuget_token.txt
