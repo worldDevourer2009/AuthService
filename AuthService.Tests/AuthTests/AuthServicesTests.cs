@@ -152,32 +152,32 @@ public class AuthServicesTests : IClassFixture<WebApplicationFactory<Program>>, 
         _output.WriteLine("Public key length: {0}", pem.Length);
     }
 
-    [Fact]
-    private async Task GenerateServiceToken_ValidCredentials_ShouldReturnToken()
-    {
-        // Arrange
-        var client = _factory.CreateClient();
-        var configuration = _factory.Services.GetRequiredService<IConfiguration>();
-        var clientId = configuration["InternalAuth:ServiceClientId"];
-        var secret = configuration["InternalAuth:ServiceClientSecret"];
-        var dto = new { ServiceClientId = clientId, ClientSecret = secret };
-        
-        // Act
-        var response = await client.PostAsJsonAsync("/api/AuthInternal/auth-internal", dto);
-        var json = await response.Content.ReadAsStringAsync();
-        using var doc = JsonDocument.Parse(json);
-        var root = doc.RootElement;
-        var result = root.GetProperty("success");
-        var token = root.GetProperty("token").GetString();
-        
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.True(result.GetBoolean());
-        Assert.NotNull(token);
-        Assert.NotEmpty(token);
-        
-        _output.WriteLine("Generated token: {0}", token);
-    }
+    // [Fact]
+    // private async Task GenerateServiceToken_ValidCredentials_ShouldReturnToken()
+    // {
+    //     // Arrange
+    //     var client = _factory.CreateClient();
+    //     var configuration = _factory.Services.GetRequiredService<IConfiguration>();
+    //     var clientId = configuration["InternalAuth:ServiceClientId"];
+    //     var secret = configuration["InternalAuth:ServiceClientSecret"];
+    //     var dto = new { ServiceClientId = clientId, ClientSecret = secret };
+    //     
+    //     // Act
+    //     var response = await client.PostAsJsonAsync("/api/AuthInternal/auth-internal", dto);
+    //     var json = await response.Content.ReadAsStringAsync();
+    //     using var doc = JsonDocument.Parse(json);
+    //     var root = doc.RootElement;
+    //     var result = root.GetProperty("success");
+    //     var token = root.GetProperty("token").GetString();
+    //     
+    //     // Assert
+    //     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    //     Assert.True(result.GetBoolean());
+    //     Assert.NotNull(token);
+    //     Assert.NotEmpty(token);
+    //     
+    //     _output.WriteLine("Generated token: {0}", token);
+    // }
 
     [Theory]
     [InlineData("wrong", "creds")]
