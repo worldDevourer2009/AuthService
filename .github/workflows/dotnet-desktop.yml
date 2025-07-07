@@ -48,12 +48,6 @@ jobs:
           ZOOKEEPER_TICK_TIME: 2000
         ports:
           - 2181:2181
-        options: >-
-          --health-cmd="echo ruok | nc localhost 2181 | grep Mode:"
-          --health-interval=15s
-          --health-timeout=5s
-          --health-retries=5
-
       kafka:
         image: confluentinc/cp-kafka:7.4.0
         ports:
