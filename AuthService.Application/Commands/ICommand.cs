@@ -1,5 +1,3 @@
-using MediatR;
-
 namespace AuthService.Application.Commands;
 
 public interface ICommand : ICommand<Unit>
