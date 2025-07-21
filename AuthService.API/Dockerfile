@@ -10,13 +10,14 @@ WORKDIR /src
 COPY ["AuthService.API/AuthService.API.csproj", "AuthService.API/"]
 
 RUN --mount=type=secret,id=nuget_token,required=false \
+    TOKEN=${NUGET_TOKEN}; \
     if [ -f /run/secrets/nuget_token ]; then \
-        export NUGET_TOKEN=$(cat /run/secrets/nuget_token); \
-    fi && \
+        TOKEN=$(cat /run/secrets/nuget_token); \
+    fi; \
     dotnet nuget add source "https://nuget.pkg.github.com/worldDevourer2009/index.json" \
         --name github \
         --username worldDevourer2009 \
-        --password ${NUGET_TOKEN} \
+        --password "$TOKEN" \
         --store-password-in-clear-text
 
 RUN dotnet restore "AuthService.API/AuthService.API.csproj"

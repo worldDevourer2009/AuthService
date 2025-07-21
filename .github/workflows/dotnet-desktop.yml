@@ -172,7 +172,8 @@ jobs:
           cd infrastructure
           docker-compose up -d
           cd ..
-          docker network create microservices-network || true
+          docker network create microservices || echo "Network already exists"
+          docker network create authService-network || echo "Network already exists"
           export IMAGE_TAG=${{ github.sha }}
           export DOCKER_REGISTRY=${{ env.DOCKER_REGISTRY }}
           export IMAGE_NAME=${{ env.IMAGE_NAME }}
